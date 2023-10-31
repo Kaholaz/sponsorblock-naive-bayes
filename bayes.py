@@ -95,31 +95,3 @@ class NaiveBayesClassifier:
             prediction = self.classify(text)
             label = "spam" if prediction else "ham"
             print(f"Text: '{text}' - Predicted: {label}")
-
-    def _mean(self, numbers: list) -> float:
-        """
-        Calculates the mean of a list of numbers.
-
-        Args:
-            numbers (list): A list of numbers.
-
-        Returns:
-            float: The mean of the numbers.
-
-        """
-        return sum(numbers) / float(len(numbers))
-
-    def _stdev(self, numbers: list) -> float:
-        """
-        Calculates the standard deviation of a list of numbers.
-
-        Args:
-            numbers (list): A list of numbers.
-
-        Returns:
-            float: The standard deviation of the numbers.
-
-        """
-        avg = self._mean(numbers)
-        variance = sum((x - avg) ** 2 for x in numbers) / float(len(numbers) - 1)
-        return math.sqrt(variance)
