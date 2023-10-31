@@ -1,10 +1,14 @@
 import re
 import math
+import datetime
+import pandas
 from collections import defaultdict
+
+BUFFER_SIZE = 100
 
 
 class NaiveBayesClassifier:
-    def __init__(self, training_data: list):
+    def __init__(self, training_data: list = None):
         """
         Initializes a Naive Bayes classifier with the provided training data.
 
@@ -20,7 +24,24 @@ class NaiveBayesClassifier:
         self.prior_spam = 0
         self.prior_ham = 0
 
-    def preprocess_text(self, text: str) -> list:
+    def load_training_data(self, path: str) -> None:
+        """
+        Loads a CSV file containing training data.
+
+        Data must be of the following format:
+        word, start, ad
+
+        Args:
+            path (str): The path to the CSV file.
+
+        Returns:
+            list: A list of tuples, each containing a text and its label ("spam" or "ham").
+
+        """
+        data = pandas.read_csv(path)
+        self.training_data = list(zip(data["word"], data["start"], data["ad"]))
+
+    def preprocess_text(self, text: str) -> str:
         """
         Preprocesses the input text by removing non-alphanumeric characters and converting it to lowercase.
 
@@ -32,7 +53,7 @@ class NaiveBayesClassifier:
 
         """
         text = re.sub(r"[^a-zA-Z\s]", "", text).lower()
-        return text.split()
+        return text
 
     def train(self):
         """
@@ -40,16 +61,14 @@ class NaiveBayesClassifier:
         and calculates the prior probabilities for spam and ham.
 
         """
-        for text, label in self.training_data:
-            words = self.preprocess_text(text)
-            if label == "spam":
+        for word, start, ad in self.training_data:
+            word_pre_processed = self.preprocess_text(word)
+            if ad:
                 self.total_spam += 1
-                for word in words:
-                    self.spam_word_counts[word] += 1
+                self.spam_word_counts[word_pre_processed] += 1
             else:
                 self.total_ham += 1
-                for word in words:
-                    self.ham_word_counts[word] += 1
+                self.ham_word_counts[word_pre_processed] += 1
 
         self.prior_spam = self.total_spam / len(self.training_data)
         self.prior_ham = self.total_ham / len(self.training_data)
@@ -83,15 +102,33 @@ class NaiveBayesClassifier:
 
         return log_prob_spam > log_prob_ham
 
+    def next_buffer(self, testing_data):
+        """
+        Tests a list of texts and classifies them as spam or ham.
+        #TODO: This should do a sliding window instead of a buffer
+
+        Args:
+            testing_data (list): A list of texts to classify. Each element should contain word, start.
+
+        """
+        buffer = ""
+        buffer_start = testing_data[0][1]
+        for index, (word, start, ad) in enumerate(testing_data):
+            buffer += word
+            if index % BUFFER_SIZE == 0:
+                yield buffer, buffer_start
+                buffer_start = start
+                buffer = ""
+
     def test(self, testing_data: list) -> None:
         """
         Tests a list of texts and classifies them as spam or ham.
 
         Args:
-            testing_data (list): A list of texts to classify.
+            testing_data (list): A list of texts to classify. Each element should contain word, start.
 
         """
-        for text in testing_data:
-            prediction = self.classify(text)
-            label = "spam" if prediction else "ham"
-            print(f"Text: '{text}' - Predicted: {label}")
+        for buffer, buffer_start in self.next_buffer(testing_data):
+            if self.classify(buffer):
+                start_datetime = datetime.timedelta(seconds=buffer_start)
+                print(f"Spam: {start_datetime}")
