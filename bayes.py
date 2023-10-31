@@ -1,44 +1,125 @@
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import classification_report
-from sklearn.pipeline import make_pipeline
-import nltk
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-from nltk.tokenize import word_tokenize
 import re
+import math
+from collections import defaultdict
 
-def download_nltk_data():
-    try:
-        nltk.data.find('tokenizers/punkt')
-        nltk.data.find('corpora/stopwords')
-        nltk.data.find('corpora/wordnet')
-    except LookupError:
-        nltk.download('punkt')
-        nltk.download('stopwords')
-        nltk.download('wordnet')
-download_nltk_data()
 
-def preprocess_text(text):
-    text = text.lower()
-    text = re.sub(r'[^a-zA-Z\s]', '', text, re.I|re.A)
-    tokens = word_tokenize(text)
-    stopword_list = stopwords.words('english')
-    tokens = [token for token in tokens if token not in stopword_list]
-    tokens = [WordNetLemmatizer().lemmatize(token) for token in tokens]
-    return ' '.join(tokens)
+class NaiveBayesClassifier:
+    def __init__(self, training_data: list):
+        """
+        Initializes a Naive Bayes classifier with the provided training data.
 
-df = pd.read_csv('DatasetAdTranscript.csv')
+        Args:
+            training_data (list): A list of tuples, each containing a text and its label ("spam" or "ham").
 
-df['processed_text'] = df['text'].apply(preprocess_text)
+        """
+        self.training_data = training_data
+        self.spam_word_counts = defaultdict(int)
+        self.ham_word_counts = defaultdict(int)
+        self.total_spam = 0
+        self.total_ham = 0
+        self.prior_spam = 0
+        self.prior_ham = 0
 
-X_train, X_test, y_train, y_test = train_test_split(df['processed_text'], df['ad'], test_size=0.2, random_state=42)
+    def preprocess_text(self, text: str) -> list:
+        """
+        Preprocesses the input text by removing non-alphanumeric characters and converting it to lowercase.
 
-pipeline = make_pipeline(TfidfVectorizer(), MultinomialNB())
+        Args:
+            text (str): The text to preprocess.
 
-pipeline.fit(X_train, y_train)
+        Returns:
+            list: A list of preprocessed words in the text.
 
-y_pred = pipeline.predict(X_test)
-print(classification_report(y_test, y_pred))
+        """
+        text = re.sub(r"[^a-zA-Z\s]", "", text).lower()
+        return text.split()
+
+    def train(self):
+        """
+        Trains the Naive Bayes classifier. This method counts the number of words in spam and ham emails
+        and calculates the prior probabilities for spam and ham.
+
+        """
+        for text, label in self.training_data:
+            words = self.preprocess_text(text)
+            if label == "spam":
+                self.total_spam += 1
+                for word in words:
+                    self.spam_word_counts[word] += 1
+            else:
+                self.total_ham += 1
+                for word in words:
+                    self.ham_word_counts[word] += 1
+
+        self.prior_spam = self.total_spam / len(self.training_data)
+        self.prior_ham = self.total_ham / len(self.training_data)
+
+    def classify(self, text: str) -> bool:
+        """
+        Classifies a text as spam or ham.
+
+        Args:
+            text (str): The text to classify.
+
+        Returns:
+            bool: True if spam, False if ham.
+
+        """
+        words = self.preprocess_text(text)
+        log_prob_spam = math.log(self.prior_spam)
+        log_prob_ham = math.log(self.prior_ham)
+
+        # Add log probabilities of each word
+        # https://en.wikipedia.org/wiki/Naive_Bayes_classifier#Document_classification
+        for word in words:
+            log_prob_spam += math.log(
+                (self.spam_word_counts[word] + 1)
+                / (self.total_spam + len(self.spam_word_counts))
+            )
+            log_prob_ham += math.log(
+                (self.ham_word_counts[word] + 1)
+                / (self.total_ham + len(self.ham_word_counts))
+            )
+
+        return log_prob_spam > log_prob_ham
+
+    def test(self, testing_data: list) -> None:
+        """
+        Tests a list of texts and classifies them as spam or ham.
+
+        Args:
+            testing_data (list): A list of texts to classify.
+
+        """
+        for text in testing_data:
+            prediction = self.classify(text)
+            label = "spam" if prediction else "ham"
+            print(f"Text: '{text}' - Predicted: {label}")
+
+    def _mean(self, numbers: list) -> float:
+        """
+        Calculates the mean of a list of numbers.
+
+        Args:
+            numbers (list): A list of numbers.
+
+        Returns:
+            float: The mean of the numbers.
+
+        """
+        return sum(numbers) / float(len(numbers))
+
+    def _stdev(self, numbers: list) -> float:
+        """
+        Calculates the standard deviation of a list of numbers.
+
+        Args:
+            numbers (list): A list of numbers.
+
+        Returns:
+            float: The standard deviation of the numbers.
+
+        """
+        avg = self._mean(numbers)
+        variance = sum((x - avg) ** 2 for x in numbers) / float(len(numbers) - 1)
+        return math.sqrt(variance)
