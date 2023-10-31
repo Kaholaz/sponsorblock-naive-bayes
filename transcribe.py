@@ -4,6 +4,8 @@ import whisper_timestamped as whisper
 import pandas as pd
 import requests
 import os
+import re
+
 
 def get_video_id(video_id: str) -> str:
     """
@@ -12,18 +14,17 @@ def get_video_id(video_id: str) -> str:
     :param video_id: Either a video-id or an url to a YouTube video.
     :return: Returns the video-id of the YouTube video.
     """
-    pattern = r'^[-_a-zA-Z0-9]{11}$'
+    pattern = r"^[-_a-zA-Z0-9]{11}$"
     match = re.search(pattern, video_id)
     if match:
         return video_id
 
-    pattern = r'[?&]v=([-_a-zA-Z0-9]{11})'
+    pattern = r"[?&]v=([-_a-zA-Z0-9]{11})"
     match = re.search(pattern, video_id)
     if match:
         return match.group(1)
     else:
         raise ValueError("Neither a YouTube video-url or a video-id was supplied.")
-
 
 
 def transcribe(video_id: str) -> pd.DataFrame:
@@ -61,14 +62,12 @@ def transcribe(video_id: str) -> pd.DataFrame:
             ads.append(False)
 
     df = pd.DataFrame({"word": words, "start": starts, "ad": ads})
-    r = requests.get(
-        f"https://sponsor.ajay.app/api/skipSegments?videoID={video_id}")
+    r = requests.get(f"https://sponsor.ajay.app/api/skipSegments?videoID={video_id}")
     if r.status_code == 404:
         # Not in the database -> no ads.
         return df
 
-    segments = [s["segment"]
-                for s in r.json()]
+    segments = [s["segment"] for s in r.json()]
     if len(segments) == 0:
         return df
 
