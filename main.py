@@ -1,4 +1,5 @@
 from bayes import NaiveBayesClassifier
+
 training_data = [
     ("spam email content 1", "spam"),
     ("ham email content 1", "ham"),
@@ -11,7 +12,12 @@ testing_data = [
     "ham spam spam",
 ]
 
+
 def main():
     bayes = NaiveBayesClassifier(training_data=training_data)
     bayes.train()
     bayes.test(testing_data=testing_data)
+
+
+if __name__ == "__main__":
+    main()
