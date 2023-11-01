@@ -89,3 +89,85 @@ def transcribe(video_id: str) -> pd.DataFrame:
         df.at[df_i, "ad"] = True
 
     return df
+
+def download_segment(video_id: str, start: float, end: float, segment_filename: str):
+    """
+    Saves a specific Youtube video segment.
+
+    :param video_id: The id of a YouTube video (the 'v' GET param), or an URL
+    :param start: The start time of the segment in seconds.
+    :param end: The end time of the segment in seconds.
+    :param segment_filename: The filename to save the downloaded segment.
+    """
+    ydl_opts = {
+        'format': 'bestaudio',
+        'outtmpl': segment_filename,
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+        }],
+        'postprocessor_args': [
+            '-ss', str(start),
+            '-to', str(end),
+        ],
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([f'http://www.youtube.com/watch?v={video_id}'])
+
+
+def transcribe_segment(segment_filename: str) -> pd.DataFrame:
+    """
+    Transcribes an audio file.
+
+    :param segment_filename: The filename of the segment to transcribe.
+    :return: Returns a DataFrame with the columns 'word', 'start', and 'ad'.
+    """
+    audio = whisper.load_audio(segment_filename)
+    os.remove(segment_filename)
+    model = whisper.load_model("tiny", device="cpu")
+    result = whisper.transcribe(model, audio, language="en")
+
+    words = []
+    starts = []
+    ads = []
+    for o in result["segments"]:
+        for word in o["words"]:
+            words.append(word["text"])
+            starts.append(word["start"])
+            ads.append(True)
+
+    return pd.DataFrame({"word": words, "start": starts, "ad": ads})
+
+
+def transcribe_ads(video_id: str) -> pd.DataFrame:
+    """
+    Transcribes only ad segments of a YouTube video if the video has any.
+
+    :param video_id: The id of a YouTube video (the 'v' GET param), or an URL
+    :return: Returns a DataFrame with the columns 'word', 'start', and 'ad' for ad segments.
+    """
+    video_id = get_video_id(video_id)
+
+    r = requests.get(f"https://sponsor.ajay.app/api/skipSegments?videoID={video_id}&category=sponsor")
+
+    if r.status_code != 200 or len(r.json()) == 0:
+        return pd.DataFrame(columns=["word", "start", "ad"])
+
+    ad_transcription_df = pd.DataFrame(columns=["word", "start", "ad"])
+
+    for idx, segment_info in enumerate(r.json()):
+        segment = segment_info["segment"]
+        start_ad, end_ad = segment
+        segment_filename = f"tmp_ad_{idx}"
+
+        download_segment(video_id, start_ad, end_ad, segment_filename)
+        segment_transcription_df = transcribe_segment(segment_filename + ".mp3")
+
+        segment_transcription_df['start'] += start_ad
+        segment_transcription_df.dropna(axis=1, how='all', inplace=True)
+
+        if not segment_transcription_df.empty:
+            ad_transcription_df = pd.concat([ad_transcription_df, segment_transcription_df], ignore_index=True)
+
+    return ad_transcription_df
