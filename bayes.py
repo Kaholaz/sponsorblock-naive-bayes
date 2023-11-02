@@ -102,6 +102,18 @@ class NaiveBayesClassifier:
         # Show the plot
         plt.tight_layout()
         plt.show()
+    
+    
+    def visualize_data_summary(self):
+        # Create a figure for the pie chart
+        plt.figure(figsize=(6, 6))
+        
+        # Create a pie chart for Spam vs. Ham Distribution
+        plt.pie([self.total_spam, self.total_ham], labels=['Spam', 'Ham'], autopct='%1.1f%%', startangle=90)
+        plt.title('Spam vs. Ham Distribution')
+
+        # Show the plot
+        plt.show()
 
     def classify(self, text: str) -> bool:
         """
