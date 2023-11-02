@@ -29,6 +29,7 @@ def main():
     bayes.train()
 
     bayes.visualize_words()
+    bayes.visualize_data_summary()
 
     bayes.test(testing_data=testing_data)
 
