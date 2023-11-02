@@ -3,8 +3,11 @@ import math
 import datetime
 import pandas
 from collections import defaultdict
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
 
-BUFFER_SIZE = 100
+BUFFER_SIZE = 50
 
 
 class NaiveBayesClassifier:
@@ -56,8 +59,18 @@ class NaiveBayesClassifier:
         """
 
         text = re.sub(r"[^a-zA-Z\s]", "", text).lower()
-        return text
 
+        tokens = word_tokenize(text)
+        stopword_list = stopwords.words('english')
+        tokens = [token for token in tokens if token not in stopword_list]
+        tokens = [WordNetLemmatizer().lemmatize(token) for token in tokens]
+
+        text = " ".join(tokens)
+
+        if text == "":
+            raise ValueError("Text is empty after preprocessing.")
+        
+        return text
     def train(self):
         """
         Trains the Naive Bayes classifier. This method counts the number of words in spam and ham emails
@@ -65,8 +78,11 @@ class NaiveBayesClassifier:
 
         """
 
-        for word, start, ad in self.training_data:
-            word_pre_processed = self.preprocess_text(word)
+        for word, _, ad in self.training_data:
+            try:
+                word_pre_processed = self.preprocess_text(word)
+            except ValueError:
+                continue
             if ad:
                 self.total_spam += 1
                 self.spam_word_counts[word_pre_processed] += 1
@@ -88,8 +104,10 @@ class NaiveBayesClassifier:
             bool: True if spam, False if ham.
 
         """
-
-        words = self.preprocess_text(text)
+        try:
+            words = self.preprocess_text(text)
+        except ValueError:
+            return False
         log_prob_spam = math.log(self.prior_spam)
         log_prob_ham = math.log(self.prior_ham)
 
