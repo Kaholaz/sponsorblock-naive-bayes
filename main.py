@@ -27,6 +27,9 @@ def main():
     bayes = NaiveBayesClassifier(training_data=training_data)
 
     bayes.train()
+
+    bayes.visualize_words()
+
     bayes.test(testing_data=testing_data)
 
 
