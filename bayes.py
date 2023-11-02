@@ -6,6 +6,8 @@ from collections import defaultdict
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
+from wordcloud import WordCloud
+from matplotlib import pyplot as plt
 
 BUFFER_SIZE = 50
 
@@ -75,6 +77,31 @@ class NaiveBayesClassifier:
 
         self.prior_spam = self.total_spam / len(self.training_data)
         self.prior_ham = self.total_ham / len(self.training_data)
+    
+    def visualize_words(self):
+
+        # Generate word cloud for spam words
+        spam_wordcloud = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(self.spam_word_counts)
+
+        # Generate word cloud for ham words
+        ham_wordcloud = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(self.ham_word_counts)
+
+        # Create subplots
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+        # Display the spam word cloud
+        ax1.imshow(spam_wordcloud, interpolation='bilinear')
+        ax1.set_title('Spam Word Cloud')
+        ax1.axis('off')
+
+        # Display the ham word cloud
+        ax2.imshow(ham_wordcloud, interpolation='bilinear')
+        ax2.set_title('Ham Word Cloud')
+        ax2.axis('off')
+
+        # Show the plot
+        plt.tight_layout()
+        plt.show()
 
     def classify(self, text: str) -> bool:
         """
