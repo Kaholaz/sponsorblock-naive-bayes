@@ -16,6 +16,7 @@ class NaiveBayesClassifier:
             training_data (list): A list of tuples, each containing a text and its label ("spam" or "ham").
 
         """
+
         self.training_data = training_data
         self.spam_word_counts = defaultdict(int)
         self.ham_word_counts = defaultdict(int)
@@ -38,6 +39,7 @@ class NaiveBayesClassifier:
             list: A list of tuples, each containing a text and its label ("spam" or "ham").
 
         """
+
         data = pandas.read_csv(path)
         self.training_data = list(zip(data["word"], data["start"], data["ad"]))
 
@@ -52,6 +54,7 @@ class NaiveBayesClassifier:
             list: A list of preprocessed words in the text.
 
         """
+
         text = re.sub(r"[^a-zA-Z\s]", "", text).lower()
         return text
 
@@ -61,6 +64,7 @@ class NaiveBayesClassifier:
         and calculates the prior probabilities for spam and ham.
 
         """
+
         for word, start, ad in self.training_data:
             word_pre_processed = self.preprocess_text(word)
             if ad:
@@ -84,6 +88,7 @@ class NaiveBayesClassifier:
             bool: True if spam, False if ham.
 
         """
+
         words = self.preprocess_text(text)
         log_prob_spam = math.log(self.prior_spam)
         log_prob_ham = math.log(self.prior_ham)
@@ -102,7 +107,7 @@ class NaiveBayesClassifier:
 
         return log_prob_spam > log_prob_ham
 
-    def next_buffer(self, testing_data):
+    def next_buffer(self, testing_data, buffer_size):
         """
         Tests a list of texts and classifies them as spam or ham.
         #TODO: This should do a sliding window instead of a buffer
@@ -111,16 +116,17 @@ class NaiveBayesClassifier:
             testing_data (list): A list of texts to classify. Each element should contain word, start.
 
         """
+
         buffer = ""
         buffer_start = testing_data[0][1]
         for index, (word, start, ad) in enumerate(testing_data):
             buffer += word
-            if index % BUFFER_SIZE == 0:
+            if index % buffer_size == 0:
                 yield buffer, buffer_start
                 buffer_start = start
                 buffer = ""
 
-    def test(self, testing_data: list) -> None:
+    def test(self, testing_data: list, buffer_size=BUFFER_SIZE) -> None:
         """
         Tests a list of texts and classifies them as spam or ham.
 
@@ -128,7 +134,8 @@ class NaiveBayesClassifier:
             testing_data (list): A list of texts to classify. Each element should contain word, start.
 
         """
-        for buffer, buffer_start in self.next_buffer(testing_data):
+
+        for buffer, buffer_start in self.next_buffer(testing_data, buffer_size):
             if self.classify(buffer):
                 start_datetime = datetime.timedelta(seconds=buffer_start)
                 print(f"Spam: {start_datetime}")
