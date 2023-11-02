@@ -7,6 +7,7 @@ from transcribe import transcribe, get_video_id
 class FileType(Enum):
     TRAINING = "training"
     TESTING = "testing"
+    ROOT = ""
 
 
 DEFAULT_TRANSCRIPTION_PATH = "transcriptions/"
