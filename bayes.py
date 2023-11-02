@@ -28,23 +28,6 @@ class NaiveBayesClassifier:
         self.prior_spam = 0
         self.prior_ham = 0
 
-    def load_training_data(self, path: str) -> None:
-        """
-        Loads a CSV file containing training data.
-
-        Data must be of the following format:
-        word, start, ad
-
-        Args:
-            path (str): The path to the CSV file.
-
-        Returns:
-            list: A list of tuples, each containing a text and its label ("spam" or "ham").
-
-        """
-
-        data = pandas.read_csv(path)
-        self.training_data = list(zip(data["word"], data["start"], data["ad"]))
 
     def preprocess_text(self, text: str) -> str:
         """
