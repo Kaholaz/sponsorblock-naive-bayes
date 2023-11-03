@@ -1,6 +1,14 @@
-import json
+"""
+    This code is used to build a dataset of youtube video transcripts, and mark the sentences as ad or not.
+    The code uses the trimmed and sorted sponsorTimes.csv file to fetch the manual english transcript for
+        each yt video id using Youtube's api.
+    Each time a transcript is fetched, each sentence is compared against the sponsor timestamps to mark
+        each sentence in the transcript as an ad or not and then saved to the json dataset file.
+"""
+
 from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound
 import pandas as pd
+import json
 import os
 import re
 
