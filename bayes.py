@@ -8,8 +8,10 @@ from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 from wordcloud import WordCloud
 from matplotlib import pyplot as plt
+import nltk
 
-BUFFER_SIZE = 50
+
+WINDOW_SIZE = 50
 
 
 class NaiveBayesClassifier:
@@ -30,7 +32,6 @@ class NaiveBayesClassifier:
         self.prior_spam = 0
         self.prior_ham = 0
 
-
     def preprocess_text(self, text: str) -> str:
         """
         Preprocesses the input text by removing non-alphanumeric characters and converting it to lowercase.
@@ -44,9 +45,12 @@ class NaiveBayesClassifier:
         """
 
         text = re.sub(r"[^a-zA-Z\s]", "", text).lower()
+        text = str(text)
+
+        return text
 
         tokens = word_tokenize(text)
-        stopword_list = stopwords.words('english')
+        stopword_list = stopwords.words("english")
         tokens = [token for token in tokens if token not in stopword_list]
         tokens = [WordNetLemmatizer().lemmatize(token) for token in tokens]
 
@@ -54,8 +58,9 @@ class NaiveBayesClassifier:
 
         if text == "":
             raise ValueError("Text is empty after preprocessing.")
-        
+
         return text
+
     def train(self):
         """
         Trains the Naive Bayes classifier. This method counts the number of words in spam and ham emails
@@ -77,40 +82,47 @@ class NaiveBayesClassifier:
 
         self.prior_spam = self.total_spam / len(self.training_data)
         self.prior_ham = self.total_ham / len(self.training_data)
-    
-    def visualize_words(self):
 
+    def visualize_words(self):
         # Generate word cloud for spam words
-        spam_wordcloud = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(self.spam_word_counts)
+        spam_wordcloud = WordCloud(
+            width=800, height=400, background_color="white"
+        ).generate_from_frequencies(self.spam_word_counts)
 
         # Generate word cloud for ham words
-        ham_wordcloud = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(self.ham_word_counts)
+        ham_wordcloud = WordCloud(
+            width=800, height=400, background_color="white"
+        ).generate_from_frequencies(self.ham_word_counts)
 
         # Create subplots
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
 
         # Display the spam word cloud
-        ax1.imshow(spam_wordcloud, interpolation='bilinear')
-        ax1.set_title('Spam Word Cloud')
-        ax1.axis('off')
+        ax1.imshow(spam_wordcloud, interpolation="bilinear")
+        ax1.set_title("Spam Word Cloud")
+        ax1.axis("off")
 
         # Display the ham word cloud
-        ax2.imshow(ham_wordcloud, interpolation='bilinear')
-        ax2.set_title('Ham Word Cloud')
-        ax2.axis('off')
+        ax2.imshow(ham_wordcloud, interpolation="bilinear")
+        ax2.set_title("Ham Word Cloud")
+        ax2.axis("off")
 
         # Show the plot
         plt.tight_layout()
         plt.show()
-    
-    
+
     def visualize_data_summary(self):
         # Create a figure for the pie chart
         plt.figure(figsize=(6, 6))
-        
+
         # Create a pie chart for Spam vs. Ham Distribution
-        plt.pie([self.total_spam, self.total_ham], labels=['Spam', 'Ham'], autopct='%1.1f%%', startangle=90)
-        plt.title('Spam vs. Ham Distribution')
+        plt.pie(
+            [self.total_spam, self.total_ham],
+            labels=["Spam", "Ham"],
+            autopct="%1.1f%%",
+            startangle=90,
+        )
+        plt.title("Spam vs. Ham Distribution")
 
         # Show the plot
         plt.show()
@@ -123,13 +135,14 @@ class NaiveBayesClassifier:
             text (str): The text to classify.
 
         Returns:
-            bool: True if spam, False if ham.
+            list: A list containing the log probability of the text being spam and the log probability of the text being ham.
 
         """
         try:
             words = self.preprocess_text(text)
         except ValueError:
-            return False
+            return [0, 0]
+
         log_prob_spam = math.log(self.prior_spam)
         log_prob_ham = math.log(self.prior_ham)
 
@@ -145,37 +158,78 @@ class NaiveBayesClassifier:
                 / (self.total_ham + len(self.ham_word_counts))
             )
 
-        return log_prob_spam > log_prob_ham
+        return [log_prob_spam, log_prob_ham]
 
-    def next_buffer(self, testing_data, buffer_size):
+
+    def test(self, testing_data: list, window_size=WINDOW_SIZE) -> None:
         """
-        Tests a list of texts and classifies them as spam or ham.
-        #TODO: This should do a sliding window instead of a buffer
+        Tests a list of texts and classifies them as spam or ham using a sliding window.
 
         Args:
             testing_data (list): A list of texts to classify. Each element should contain word, start.
+            window_size (int): The size of the sliding window.
 
         """
 
+        word_classification = testing_data
         buffer = ""
-        buffer_start = testing_data[0][1]
-        for index, (word, start, ad) in enumerate(testing_data):
+        spam_total = 0
+        ham_total = 0
+
+        for index, (word, _, _) in enumerate(testing_data):
             buffer += word
-            if index % buffer_size == 0:
-                yield buffer, buffer_start
-                buffer_start = start
-                buffer = ""
+            if index >= window_size:
+                buffer = buffer[
+                    len(word) :
+                ]  # remove the word at the beginning of the buffer
 
-    def test(self, testing_data: list, buffer_size=BUFFER_SIZE) -> None:
-        """
-        Tests a list of texts and classifies them as spam or ham.
+                spam, ham = self.classify(buffer)
 
-        Args:
-            testing_data (list): A list of texts to classify. Each element should contain word, start.
+                # Update the totals
+                spam_total += spam
+                ham_total += ham
 
-        """
+                for i in range(index - window_size, index):
+                    if isinstance(word_classification[i], tuple):
+                        word_classification[i] = list(word_classification[i])
+                        word_classification[i].append([0, 0])
+                        word_classification[i].append(0)
+                        word_classification[i][2] = [0, 0]
 
-        for buffer, buffer_start in self.next_buffer(testing_data, buffer_size):
-            if self.classify(buffer):
-                start_datetime = datetime.timedelta(seconds=buffer_start)
-                print(f"Spam: {start_datetime}")
+                    # Total spam and ham for each word
+                    word_classification[i][2][0] += spam
+                    word_classification[i][2][1] += ham
+
+                    # Total number of times the word was classified
+                    word_classification[i][4] += 1
+
+                    # Average spam and ham for each word
+                    word_classification[i][3][0] = (
+                        word_classification[i][2][0] / word_classification[i][4]
+                    )
+
+                    word_classification[i][3][1] = (
+                        word_classification[i][2][1] / word_classification[i][4]
+                    )
+        plt.figure(figsize=(10, 6))
+
+        spam_score = []
+        ham_score = []
+        timestamps = []
+
+        for word in word_classification:
+            if isinstance(word, tuple):
+                continue
+            timestamps.append(word[1])
+            spam_score.append(word[3][0])
+            ham_score.append(word[3][1])
+        
+        # Create a plot for the spam and ham scores
+
+
+        plt.plot(timestamps, spam_score, label="Spam")
+        plt.plot(timestamps, ham_score, label="Ham")
+
+        plt.show()
+        
+        

@@ -1,6 +1,18 @@
 from bayes import NaiveBayesClassifier
 from files import TranscriptionFileHandler, FileType
 from transcribe import *
+import nltk
+
+def download_nltk_data():
+    try:
+        nltk.data.find('tokenizers/punkt')
+        nltk.data.find('corpora/stopwords')
+        nltk.data.find('corpora/wordnet')
+    except LookupError:
+        nltk.download('punkt')
+        nltk.download('stopwords')
+        nltk.download('wordnet')
+#download_nltk_data()
 
 
 def main():
@@ -28,8 +40,8 @@ def main():
 
     bayes.train()
 
-    bayes.visualize_words()
-    bayes.visualize_data_summary()
+    #bayes.visualize_words()
+    #bayes.visualize_data_summary()
 
     bayes.test(testing_data=testing_data)
 
