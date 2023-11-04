@@ -11,7 +11,7 @@ import pandas as pd
 chunk_size = 50000
 chunks = []
 
-directory = ".idea"
+directory = ".idea/"
 
 sponsorTimes_path = directory + "sponsorTimes.csv"
 processed_sponsorTimes_path = directory + "processed_sponsorTimes.csv"
