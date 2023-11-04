@@ -6,7 +6,7 @@
         each sentence in the transcript as an ad or not and then saved to the json dataset file.
 """
 
-from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound
+from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
 import pandas as pd
 import json
 import os
@@ -67,7 +67,7 @@ for _, row in df_video_sponsor_data.iterrows():
         with open(transcription_path, "a") as json_file:
             json_file.write(json.dumps(processed_transcript) + "\n")
 
-    except NoTranscriptFound:
+    except NoTranscriptFound or TranscriptsDisabled:
         print(f"Manual transcript not found for video ID {video_id}")
         no_transcript_set.add(video_id)
         with open(no_transcript_path, "a") as csv_file:
@@ -93,3 +93,11 @@ with open(transcription_path, "r") as file:
 df_transcripts = pd.DataFrame(transcript_data)
 
 print(df_transcripts)
+
+#TODO Loop through transcript data and make sure all sponsor segments are marked as ads,
+# currently only marks first sponsor segment when the video transcription is fetched and
+# if same id is repeated for other segments in same video, the transcription fetch is skipped
+# Just have to loop through all video ids, and compare text against sponsor timestamps in processed_sponsorTimes.csv
+
+#TODO Also loop through the dataset and remove videos with music category.
+# Can use youtube api video list fetch, and check response categories.
