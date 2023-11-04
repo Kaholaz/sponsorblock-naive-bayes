@@ -19,7 +19,7 @@ sponsorTimes_path = directory + "sponsorTimes.csv"
 processed_sponsorTimes_path = directory + "processed_sponsorTimes.csv"
 
 for chunk in pd.read_csv(sponsorTimes_path, usecols=["videoID", "startTime", "endTime", "views", "votes", "category"], chunksize=chunk_size):
-    filtered_chunk = chunk[(chunk["votes"] >= 5) & (chunk["category"] == "sponsor")]
+    filtered_chunk = chunk[(chunk["votes"] >= 3) & (chunk["category"] == "sponsor")]
     chunks.append(filtered_chunk)
 
 df_combined = pd.concat(chunks)
