@@ -3,10 +3,11 @@
     The sponsorTimes.csv file contains sponsor segment timestamps for a lot of youtube videos.
     This code can be used to trim off unnecessary columns from sponsorTimes.csv,
         then sort videoID by views in descending order.
-    It also preprocesses the data to remove rows depending on category, and number of votes.
-    This ensures that only sponsor categories, and segments are verified by users.
-    The sponsorTimes.csv can then be used in youtube_transcription_fetcher.py to fetch the manual english
-        transcript for each yt video id, and also assign each sentence in each transcript as an ad or not.
+    It also filters out certain rows depending on category, and number of votes.
+    This ensures that only sponsor categories are included, and that segments are somewhat verified by users.
+    It also checks video category to remove music videos to prevent these from being included in the dataset.
+    The sponsorTimes.csv can then be used in youtube_transcription_fetcher.py to fetch the english
+        transcripts for each yt video id, and also assign each sentence in each transcript as an ad or not.
 """
 
 import pandas as pd
