@@ -25,12 +25,12 @@ API_KEY = "{Insert_Youtube_API_Key}"
 YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3/videos"
 
 
-def get_categories(video_ids):
+def get_categories(video_ids: list) -> dict[str, str]:
     max_ids_per_request = 50
     video_categories = {}
 
     for i in range(0, len(video_ids), max_ids_per_request):
-        batch_ids = video_ids[i:i+max_ids_per_request]
+        batch_ids = video_ids[i:i + max_ids_per_request]
         params = {
             "part": "snippet",
             "id": ",".join(batch_ids),
@@ -39,7 +39,7 @@ def get_categories(video_ids):
         }
         response = requests.get(YOUTUBE_API_URL, params=params)
         response.raise_for_status()
-        if i%1000 == 0:
+        if i % 1000 == 0:
             print(f"Processed {i} videoIDs")
 
         for item in response.json().get("items", []):
@@ -48,22 +48,23 @@ def get_categories(video_ids):
     return video_categories
 
 
-for chunk in pd.read_csv(sponsorTimes_path, usecols=["videoID", "startTime", "endTime", "views", "votes", "category"], chunksize=chunk_size):
-    filtered_chunk = chunk[(chunk["votes"] >= 3) & (chunk["category"] == "sponsor")]
-    chunks.append(filtered_chunk)
+for chunk in pd.read_csv(sponsorTimes_path, usecols=["videoID", "startTime", "endTime", "views", "votes", "category"],
+                         chunksize=chunk_size):
+    filteredChunk = chunk[(chunk["votes"] >= 3) & (chunk["category"] == "sponsor")]
+    chunks.append(filteredChunk)
 
-df_combined = pd.concat(chunks)
+dfCombined = pd.concat(chunks)
 
-df_sorted = df_combined.sort_values(by="views", ascending=False)
+dfSorted = dfCombined.sort_values(by="views", ascending=False)
 
-unique_video_ids = df_sorted["videoID"].unique().tolist()
+uniqueVideoIds = dfSorted["videoID"].unique().tolist()
 
-video_categories = get_categories(unique_video_ids)
+videoCategories = get_categories(uniqueVideoIds)
 
-music_videos = {video_id for video_id, category_id in video_categories.items() if category_id == "10"}
+musicVideos = {video_id for video_id, category_id in videoCategories.items() if category_id == "10"}
 
-df_sorted = df_sorted[~df_sorted["videoID"].isin(music_videos)]
+dfSorted = dfSorted[~dfSorted["videoID"].isin(musicVideos)]
 
-df_sorted.to_csv(processed_sponsorTimes_path, index=False)
+dfSorted.to_csv(processed_sponsorTimes_path, index=False)
 
-print(f"Filtered out video ids classified as music, total {len(music_videos)} videos:\n{music_videos}")
+print(f"Filtered out video ids classified as music, total {len(musicVideos)} videos:\n{musicVideos}")
