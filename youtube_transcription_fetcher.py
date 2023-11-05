@@ -1,11 +1,13 @@
 """
-    This code is used to build a dataset of YouTube video transcripts, and mark the sentences as ad or not.
-    The code uses the filtered and sorted sponsorTimes.csv file to fetch english transcript for
-        each yt video id using YouTube"s api.
-    It first tries to find manually written transcripts, otherwise defaults to automatically generated ones.
+    This code is used to build a dataset of YouTube video transcripts, using youtube api to
+        fetch the transcriptions.
+    The code uses the filtered and sorted sponsorTimes.csv file to find the ids of videos that
+        have sponsor segments.
+    Those ids are used with the youtube api to fetch and assign an "ad" label to each line of the transcript.
+    It first tries to find manually user written transcripts, otherwise defaults to automatically generated ones.
     Each time a transcript is fetched, each sentence is compared against the sponsor timestamps to assign
-    ad labels, after a transcript has been handled, it is saved to the json dataset file specific to
-    the type of transcript (manual or auto).
+        ad labels, after a transcript has been handled, it is saved to the json dataset file specific to
+        the type of transcript (manual or auto).
 """
 from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
 import pandas as pd
