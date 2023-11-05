@@ -1,11 +1,12 @@
 """
-    This code is used to build a dataset of youtube video transcripts, and mark the sentences as ad or not.
-    The code uses the trimmed and sorted sponsorTimes.csv file to fetch the manual english transcript for
-        each yt video id using Youtube's api.
-    Each time a transcript is fetched, each sentence is compared against the sponsor timestamps to mark
-        each sentence in the transcript as an ad or not and then saved to the json dataset file.
+    This code is used to build a dataset of YouTube video transcripts, and mark the sentences as ad or not.
+    The code uses the filtered and sorted sponsorTimes.csv file to fetch english transcript for
+        each yt video id using YouTube"s api.
+    It first tries to find manually written transcripts, otherwise defaults to automatically generated ones.
+    Each time a transcript is fetched, each sentence is compared against the sponsor timestamps to assign
+    ad labels, after a transcript has been handled, it is saved to the json dataset file specific to
+    the type of transcript (manual or auto).
 """
-
 from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
 import pandas as pd
 import json
@@ -14,49 +15,93 @@ import re
 
 processed_sponsorTimes_path = ".idea/processed_sponsorTimes.csv"
 
-transcription_dir = "transcriptions/"
-os.makedirs(transcription_dir, exist_ok=True)
+transcriptionDir = "transcriptions/"
+os.makedirs(transcriptionDir, exist_ok=True)
 
-transcription_path = transcription_dir + "youtube_transcriptions.json"
-no_transcript_path = transcription_dir + "yt_vids_without_manual_english_transcript.csv"
+manualTranscriptionPath = transcriptionDir + "youtube_manual_transcriptions.json"
+autoTranscriptionPath = transcriptionDir + "youtube_auto_transcriptions.json"
+noTranscriptPath = transcriptionDir + "yt_vids_without_transcript.csv"
 
-transcript_language = ["en-GB", "en-US", "en-CA", "en-AU", "en-NZ", "en"]
+transcriptLang = ["en-GB", "en-US", "en-CA", "en-AU", "en-NZ", "en"]
+
+videoIDCountToCheck = 50000
 
 try:
-    df_no_transcript = pd.read_csv(no_transcript_path)
-    no_transcript_set = set(df_no_transcript["videoID"])
+    dfNoTranscript = pd.read_csv(noTranscriptPath)
+    noTranscriptSet = set(dfNoTranscript["videoID"])
 except FileNotFoundError:
-    no_transcript_set = set()
-    pd.DataFrame(columns=["videoID"]).to_csv(no_transcript_path, index=False)
+    noTranscriptSet = set()
+    pd.DataFrame(columns=["videoID"]).to_csv(noTranscriptPath, index=False)
 
-df_video_sponsor_data = pd.read_csv(processed_sponsorTimes_path, nrows=50000)
 
-for _, row in df_video_sponsor_data.iterrows():
-    video_id = row["videoID"]
-    start_time = row["startTime"]
-    end_time = row["endTime"]
-
-    with open(transcription_path, "r") as file:
-        if video_id in file.read():
-            print(f"Transcript for videoID {video_id} already exists")
-            continue
-
-    with open(no_transcript_path, "r") as file:
-        if video_id in file.read() or video_id in no_transcript_set:
-            print(f"Skipping videoID {video_id}, as no transcript existed when checked during a past run")
-            continue
-
+def video_id_exists_in_file(file_path: str, video_id: str) -> bool:
     try:
-        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-        transcript = transcript_list.find_manually_created_transcript(transcript_language).fetch()
+        with open(file_path, "r") as file:
+            return video_id in file.read()
+    except FileNotFoundError:
+        return False
+
+
+dfVideoSponsorData = pd.read_csv(processed_sponsorTimes_path)  # , nrows=videoID_count_to_check)
+
+groupedSponsorData = dfVideoSponsorData.groupby("videoID", sort=False)
+#for video_id, group in groupedSponsorData:
+#    print(video_id, "\n", group, zip(group["startTime"], group["endTime"]))
+
+
+def build_dataset() -> None:
+    for video_id, group in groupedSponsorData:
+        all_sponsor_segments = list(zip(group["startTime"], group["endTime"]))
+        video_id = str(video_id)
+
+        if video_id_exists_in_file(manualTranscriptionPath, video_id) or video_id_exists_in_file(
+                autoTranscriptionPath,
+                video_id):
+            print(f"Transcript for videoID {video_id} already exists, skipping fetch")
+            continue
+
+        if video_id in noTranscriptSet:
+            print(f"Skipping videoID {video_id}, as no transcript existed when checked during a past run")
+
+        try:
+            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+            transcript = transcript_list.find_manually_created_transcript(transcriptLang).fetch()
+            transcription_path = manualTranscriptionPath
+        except NoTranscriptFound:
+            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+            transcript = transcript_list.find_generated_transcript(transcriptLang).fetch()
+            transcription_path = autoTranscriptionPath
+        except TranscriptsDisabled:
+            print(f"Transcripts are disabled for video ID {video_id}")
+            noTranscriptSet.add(video_id)
+            with open(noTranscriptPath, "a") as csv_file:
+                csv_file.write(video_id + "\n")
+            continue
+        except Exception as e:
+            print(f"An error occurred for video ID {video_id}: {e}")
+            continue
 
         processed_transcript = {
             "video_id": video_id,
             "transcript": []
         }
         for line in transcript:
-            clean_text = re.sub(r"([\n\"\-,^\s])+", " ", line["text"]).strip()
-            is_ad = start_time <= line["start"] <= end_time
+            clean_text = re.sub(r"\s*[(\[](\s|\w)+[])]", " ", line["text"]).strip()
+            clean_text = re.sub(r"([\n\"\-,^\s._])+", " ", clean_text).strip()
+            if not clean_text:
+                continue
+
+            line_start = line["start"]
+            line_end = line["start"] + line["duration"]
+
+            is_ad = False
+            for sponsor_start, sponsor_end in all_sponsor_segments:
+                #print(f"Line: {line} | Sponsor: {sponsor_start} - {sponsor_end}")
+                #print(f"{line_start < sponsor_end-0.2} and {line_end > sponsor_start} is ad?")
+                if line_start < sponsor_end-0.2 and line_end > sponsor_start:
+                    is_ad = True
+                    break
+
             processed_transcript["transcript"].append({
                 "text": clean_text,
                 "start": line["start"],
@@ -66,38 +111,30 @@ for _, row in df_video_sponsor_data.iterrows():
 
         with open(transcription_path, "a") as json_file:
             json_file.write(json.dumps(processed_transcript) + "\n")
-
-    except NoTranscriptFound or TranscriptsDisabled:
-        print(f"Manual transcript not found for video ID {video_id}")
-        no_transcript_set.add(video_id)
-        with open(no_transcript_path, "a") as csv_file:
-            csv_file.write(video_id + "\n")
-
-    except Exception as e:
-        print(f"An error occurred for video ID {video_id}: {e}")
+            print(f"Saved transcript for videoID {video_id}")
 
 
-transcript_data = []
+def dataset_file_to_df(file_path: str) -> pd.DataFrame:
+    transcript_data = []
+    with open(file_path, "r") as file:
+        for line in file:
+            json_line = json.loads(line)
+            for transcript in json_line["transcript"]:
+                transcript_data.append({
+                    "text": transcript["text"],
+                    "start": transcript["start"],
+                    "duration": transcript["duration"],
+                    "ad": transcript["ad"]
+                })
+    return pd.DataFrame(transcript_data)
 
-with open(transcription_path, "r") as file:
-    for line in file:
-        record = json.loads(line)
-        for transcript in record["transcript"]:
-            transcript_data.append({
-                "text": transcript["text"],
-                "start": transcript["start"],
-                "duration": transcript["duration"],
-                "ad": transcript["ad"]
-            })
 
-df_transcripts = pd.DataFrame(transcript_data)
+build_dataset()
 
-print(df_transcripts)
+dfTranscripts = dataset_file_to_df(manualTranscriptionPath)
 
-#TODO Loop through transcript data and make sure all sponsor segments are marked as ads,
-# currently only marks first sponsor segment when the video transcription is fetched and
-# if same id is repeated for other segments in same video, the transcription fetch is skipped
-# Just have to loop through all video ids, and compare text against sponsor timestamps in processed_sponsorTimes.csv
+print(dfTranscripts)
 
-#TODO Also loop through the dataset and remove videos with music category.
-# Can use youtube api video list fetch, and check response categories.
+dfTranscripts = dataset_file_to_df(autoTranscriptionPath)
+
+print(dfTranscripts)
