@@ -64,6 +64,7 @@ def build_dataset() -> None:
 
         if video_id in noTranscriptSet:
             print(f"Skipping videoID {video_id}, as no transcript existed when checked during a past run")
+            continue
 
         try:
             transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
