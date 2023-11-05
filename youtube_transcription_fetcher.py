@@ -71,9 +71,21 @@ def build_dataset() -> None:
             transcript = transcript_list.find_manually_created_transcript(transcriptLang).fetch()
             transcription_path = manualTranscriptionPath
         except NoTranscriptFound:
-            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-            transcript = transcript_list.find_generated_transcript(transcriptLang).fetch()
-            transcription_path = autoTranscriptionPath
+
+            try:
+                transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+                transcript = transcript_list.find_generated_transcript(transcriptLang).fetch()
+                transcription_path = autoTranscriptionPath
+            except NoTranscriptFound:
+                print(f"No manually or automatically generated transcript exists for video ID {video_id}")
+                noTranscriptSet.add(video_id)
+                with open(noTranscriptPath, "a") as csv_file:
+                    csv_file.write(video_id + "\n")
+                continue
+            except Exception as e:
+                print(f"An error occurred for video ID {video_id}: {e}")
+                continue
+
         except TranscriptsDisabled:
             print(f"Transcripts are disabled for video ID {video_id}")
             noTranscriptSet.add(video_id)
