@@ -67,12 +67,12 @@ class NaiveBayesClassifier:
         text = re.sub(r"[^a-zA-Z\s]", "", text).lower()
         text = str(text)
 
-        #tokens = word_tokenize(text)
-        #stopword_list = stopwords.words("english")
-        #tokens = [token for token in tokens if token not in stopword_list]
-        #tokens = [WordNetLemmatizer().lemmatize(token) for token in tokens]
+        # tokens = word_tokenize(text)
+        # stopword_list = stopwords.words("english")
+        # tokens = [token for token in tokens if token not in stopword_list]
+        # tokens = [WordNetLemmatizer().lemmatize(token) for token in tokens]
 
-        #text = " ".join(tokens)
+        # text = " ".join(tokens)
 
         if text == "":
             raise ValueError("Text is empty after preprocessing.")
@@ -107,8 +107,19 @@ class NaiveBayesClassifier:
                 self.total_ham += 1
                 self.ham_word_counts[word] += 1
 
-        self.prior_spam = self.total_spam / len(data)
-        self.prior_ham = self.total_ham / len(data)
+        prop_spam = self.total_spam / (self.total_spam + self.total_ham)
+        prop_ham = self.total_ham / (self.total_spam + self.total_ham)
+
+        self.spam_word_counts = defaultdict(
+            lambda: 0,
+            {k: v * (1 / prop_spam) for k, v in self.spam_word_counts.items()},
+        )
+        self.ham_word_counts = defaultdict(
+            lambda: 0, {k: v * (1 / prop_ham) for k, v in self.ham_word_counts.items()}
+        )
+
+        self.prior_spam = prop_spam
+        self.prior_ham = prop_ham
 
     def visualize_words(self):
         # Generate word cloud for spam words
@@ -151,10 +162,9 @@ class NaiveBayesClassifier:
         )
         plt.title("Spam vs. Ham Distribution")
 
-        # Show the plot
         plt.show()
 
-    def _classify(self, words: str) -> bool:
+    def _classify(self, words: list[str]) -> tuple[float, float]:
         """
         Classifies a text as spam or ham.
 
