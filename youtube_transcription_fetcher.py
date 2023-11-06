@@ -37,6 +37,13 @@ except FileNotFoundError:
 
 
 def video_id_exists_in_file(file_path: str, video_id: str) -> bool:
+    """
+    Checks if a video id exists in a file
+
+    :param file_path: The path to the file to check
+    :param video_id: The video id to check for
+    :return: True if video id exists, otherwise False
+    """
     try:
         with open(file_path, "r") as file:
             return video_id in file.read()
@@ -47,11 +54,23 @@ def video_id_exists_in_file(file_path: str, video_id: str) -> bool:
 dfVideoSponsorData = pd.read_csv(processed_sponsorTimes_path)  # , nrows=videoID_count_to_check)
 
 groupedSponsorData = dfVideoSponsorData.groupby("videoID", sort=False)
-#for video_id, group in groupedSponsorData:
+
+
+# for video_id, group in groupedSponsorData:
 #    print(video_id, "\n", group, zip(group["startTime"], group["endTime"]))
 
 
 def build_dataset() -> None:
+    """
+    Builds a dataset of video transcripts by using video ids from processed sponsorTimes.csv to fetch.
+    Creates a dataset for both manually translated transcripts, or if there are none,
+        it checks for auto generated ones.
+
+    Everything is saved inside the transcriptions/ directory.
+    :return:
+    """
+    reg1 = re.compile(r"\s*[(\[](\s|\w)*[])]")
+    reg2 = re.compile(r"([\n\"\-,^\s._])+")
     for video_id, group in groupedSponsorData:
         all_sponsor_segments = list(zip(group["startTime"], group["endTime"]))
         video_id = str(video_id)
@@ -101,8 +120,8 @@ def build_dataset() -> None:
             "transcript": []
         }
         for line in transcript:
-            clean_text = re.sub(r"\s*[(\[](\s|\w)+[])]", " ", line["text"]).strip()
-            clean_text = re.sub(r"([\n\"\-,^\s._])+", " ", clean_text).strip()
+            clean_text = reg1.sub(" ", line["text"]).strip()
+            clean_text = reg2.sub(" ", clean_text).strip()
             if not clean_text:
                 continue
 
@@ -111,9 +130,9 @@ def build_dataset() -> None:
 
             is_ad = False
             for sponsor_start, sponsor_end in all_sponsor_segments:
-                #print(f"Line: {line} | Sponsor: {sponsor_start} - {sponsor_end}")
-                #print(f"{line_start < sponsor_end-0.2} and {line_end > sponsor_start} is ad?")
-                if line_start < sponsor_end-0.2 and line_end > sponsor_start:
+                # print(f"Line: {line} | Sponsor: {sponsor_start} - {sponsor_end}")
+                # print(f"{line_start < sponsor_end-0.2} and {line_end > sponsor_start} is ad?")
+                if line_start < sponsor_end - 0.2 and line_end > sponsor_start:
                     is_ad = True
                     break
 
@@ -146,10 +165,10 @@ def dataset_file_to_df(file_path: str) -> pd.DataFrame:
 
 build_dataset()
 
-dfTranscripts = dataset_file_to_df(manualTranscriptionPath)
+# dfTranscripts = dataset_file_to_df(manualTranscriptionPath)
 
-print(dfTranscripts)
+# print(dfTranscripts)
 
-dfTranscripts = dataset_file_to_df(autoTranscriptionPath)
+# dfTranscripts = dataset_file_to_df(autoTranscriptionPath)
 
-print(dfTranscripts)
+# print(dfTranscripts)
