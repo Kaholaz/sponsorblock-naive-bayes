@@ -202,13 +202,15 @@ class NaiveBayesClassifier:
         processed_training_data = self.preprocess_list(testing_data)
         words = [Word(a[0]) for a in processed_training_data]
 
-        for index in range(len(processed_training_data[:-window_size + 1])):
-            window = [a[0] for a in processed_training_data[index : index + window_size]]
+        for index in range(len(processed_training_data[: -window_size + 1])):
+            window = [
+                a[0] for a in processed_training_data[index : index + window_size]
+            ]
             spam, ham = self._classify(window)
 
             for word in words[index : index + window_size]:
                 word.insert_propability(spam, ham)
-        
+
         if len(processed_training_data) < window_size:
             window = [a[0] for a in processed_training_data]
             spam, ham = self._classify(window)
@@ -223,7 +225,10 @@ class NaiveBayesClassifier:
         timestamps = []
 
         for index, word in enumerate(words):
+            time = datetime.timedelta(seconds=processed_training_data[index][1])
             timestamps.append(processed_training_data[index][1])
+            if word.average_spam > 0.8:
+                print(f"Spam: {time}")
             spam_score.append(word.average_spam)
             ham_score.append(word.average_ham)
 
