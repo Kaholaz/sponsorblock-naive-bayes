@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import re
 import math
 import datetime
@@ -13,6 +14,25 @@ from tqdm import tqdm
 
 WINDOW_SIZE = 50
 
+@dataclass
+class Word:
+    word: str
+    total_spam: float = 0
+    total_ham: float = 0
+    runs: int = 0
+    
+    @property
+    def average_spam(self):
+        return self.total_spam / self.runs
+
+    @property
+    def average_ham(self):
+        return self.total_ham / self.runs
+
+    def insert_propability(self, spam: float, ham: float):
+        self.total_ham += ham
+        self.total_spam += spam
+        self.runs += 1
 
 class NaiveBayesClassifier:
     def __init__(self, training_data: list = None):
@@ -47,12 +67,12 @@ class NaiveBayesClassifier:
         text = re.sub(r"[^a-zA-Z\s]", "", text).lower()
         text = str(text)
 
-        tokens = word_tokenize(text)
-        stopword_list = stopwords.words("english")
-        tokens = [token for token in tokens if token not in stopword_list]
-        tokens = [WordNetLemmatizer().lemmatize(token) for token in tokens]
+        #tokens = word_tokenize(text)
+        #stopword_list = stopwords.words("english")
+        #tokens = [token for token in tokens if token not in stopword_list]
+        #tokens = [WordNetLemmatizer().lemmatize(token) for token in tokens]
 
-        text = " ".join(tokens)
+        #text = " ".join(tokens)
 
         if text == "":
             raise ValueError("Text is empty after preprocessing.")
@@ -65,6 +85,7 @@ class NaiveBayesClassifier:
         for word in tqdm(text):
             try:
                 item = list(word)
+                item[0] = str(item[0])
                 item[0] = self.preprocess_word(item[0])
                 preprocessed_text.append(item)
             except ValueError:
@@ -78,7 +99,6 @@ class NaiveBayesClassifier:
 
         """
         data = self.preprocess_list(self.training_data)
-
         for word, _, ad in data:
             if ad:
                 self.total_spam += 1
@@ -173,60 +193,42 @@ class NaiveBayesClassifier:
 
         """
 
-        word_classification = self.preprocess_list(testing_data)
-        buffer = ""
-        spam_total = 0
-        ham_total = 0
+        processed_training_data = self.preprocess_list(testing_data)
+        words = [Word(a[0]) for a in processed_training_data]
 
-        for index, (word, _, _) in enumerate(testing_data):
-            buffer += word
-            if index >= window_size:
-                buffer = buffer[len(word) :]
+        for index in range(len(processed_training_data[:-window_size + 1])):
+            window = [a[0] for a in processed_training_data[index : index + window_size]]
+            spam, ham = self._classify(window)
 
-                spam, ham = self._classify(buffer)
+            for word in words[index : index + window_size]:
+                word.insert_propability(spam, ham)
+        
+        if len(processed_training_data) < window_size:
+            window = [a[0] for a in processed_training_data]
+            spam, ham = self._classify(window)
 
-                # Update the totals
-                spam_total += spam
-                ham_total += ham
+            for word in words:
+                word.insert_propability(spam, ham)
 
-                for i in range(index - window_size, index):
-                    if i > len(word_classification) - 1:
-                        continue
-                    if len(word_classification[i]) <= 3:
-                        word_classification[i] = list(word_classification[i])
-                        word_classification[i].append([0, 0])
-                        word_classification[i].append(0)
-                        word_classification[i][2] = [0, 0]
-
-                    # Total spam and ham for each word
-                    word_classification[i][2][0] += spam
-                    word_classification[i][2][1] += ham
-
-                    # Total number of times the word was classified
-                    word_classification[i][4] += 1
-
-                    # Average spam and ham for each word
-                    word_classification[i][3][0] = (
-                        word_classification[i][2][0] / word_classification[i][4]
-                    )
-
-                    word_classification[i][3][1] = (
-                        word_classification[i][2][1] / word_classification[i][4]
-                    )
         plt.figure(figsize=(10, 6))
 
         spam_score = []
         ham_score = []
         timestamps = []
 
-        for word in word_classification:
-            timestamps.append(word[1])
-            spam_score.append(word[3][0])
-            ham_score.append(word[3][1])
+        for index, word in enumerate(words):
+            timestamps.append(processed_training_data[index][1])
+            spam_score.append(word.average_spam)
+            ham_score.append(word.average_ham)
 
         # Create a plot for the spam and ham scores
 
         plt.plot(timestamps, spam_score, label="Spam")
         plt.plot(timestamps, ham_score, label="Ham")
+
+        plt.xlabel("Time")
+        plt.ylabel("Score")
+
+        plt.legend()
 
         plt.show()
