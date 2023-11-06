@@ -18,26 +18,20 @@ WINDOW_SIZE = 50
 @dataclass
 class Word:
     word: str
-    total_spam: float = 0
-    total_ham: float = 0
+    total_spam_probability: float = 0
     runs: int = 0
 
     @property
     def average_spam(self):
-        return self.total_spam / self.runs
+        return self.total_spam_probability / self.runs
 
-    @property
-    def average_ham(self):
-        return self.total_ham / self.runs
-
-    def insert_propability(self, spam: float, ham: float):
-        self.total_ham += ham
-        self.total_spam += spam
+    def insert_propability(self, spam_probability: float):
+        self.total_spam_probability += spam_probability
         self.runs += 1
 
 
 class NaiveBayesClassifier:
-    def __init__(self, training_data: list = None):
+    def __init__(self, training_data: list = []):
         """
         Initializes a Naive Bayes classifier with the provided training data.
 
@@ -47,14 +41,14 @@ class NaiveBayesClassifier:
         """
 
         self.training_data = training_data
-        self.spam_word_counts = defaultdict(int)
-        self.ham_word_counts = defaultdict(int)
+        self.spam_word_counts = defaultdict(float)
+        self.ham_word_counts = defaultdict(float)
         self.total_spam = 0
         self.total_ham = 0
         self.prior_spam = 0
         self.prior_ham = 0
 
-    def preprocess_word(self, text: str) -> str:
+    def preprocess_word(self, word: str) -> str:
         """
         Preprocesses the input text by removing non-alphanumeric characters and converting it to lowercase.
 
@@ -66,8 +60,8 @@ class NaiveBayesClassifier:
 
         """
 
-        text = re.sub(r"[^a-zA-Z\s]", "", text).lower()
-        text = str(text)
+        clean_word = re.sub(r"[^a-zA-Z\s]", "", word).lower()
+        clean_word = str(clean_word)
 
         # tokens = word_tokenize(text)
         # stopword_list = stopwords.words("english")
@@ -76,10 +70,10 @@ class NaiveBayesClassifier:
 
         # text = " ".join(tokens)
 
-        if text == "":
+        if clean_word == "":
             raise ValueError("Text is empty after preprocessing.")
 
-        return text
+        return clean_word
 
     def preprocess_list(self, text: list) -> list:
         preprocessed_text = []
@@ -94,13 +88,15 @@ class NaiveBayesClassifier:
                 continue
         return preprocessed_text
 
-    def train(self):
+    def train(self) -> None:
         """
         Trains the Naive Bayes classifier. This method counts the number of words in spam and ham emails
         and calculates the prior probabilities for spam and ham.
 
         """
         data = self.preprocess_list(self.training_data)
+
+        # Count the number of occurrences of each word in spam and ham emails
         for word, _, ad in data:
             if ad:
                 self.total_spam += 1
@@ -109,21 +105,22 @@ class NaiveBayesClassifier:
                 self.total_ham += 1
                 self.ham_word_counts[word] += 1
 
-        prop_spam = self.total_spam / (self.total_spam + self.total_ham)
-        prop_ham = self.total_ham / (self.total_spam + self.total_ham)
 
+        # Calculate prior probabilities (P(spam) and P(ham))
+        self.prior_spam = self.total_spam / (self.total_spam + self.total_ham)
+        self.prior_ham = self.total_ham / (self.total_spam + self.total_ham)
+
+        # Normalize the word counts, to prevent bias towards longer texts
         self.spam_word_counts = defaultdict(
             lambda: 0,
-            {k: v * (1 / prop_spam) for k, v in self.spam_word_counts.items()},
+            {k: v * (1 / self.prior_spam) for k, v in self.spam_word_counts.items()},
         )
         self.ham_word_counts = defaultdict(
-            lambda: 0, {k: v * (1 / prop_ham) for k, v in self.ham_word_counts.items()}
+            lambda: 0, {k: v * (1 / self.prior_ham) for k, v in self.ham_word_counts.items()}
         )
 
-        self.prior_spam = prop_spam
-        self.prior_ham = prop_ham
 
-    def visualize_words(self):
+    def visualize_words(self) -> None:
         # Generate word cloud for spam words
         spam_wordcloud = WordCloud(
             width=800, height=400, background_color="white"
@@ -135,7 +132,7 @@ class NaiveBayesClassifier:
         ).generate_from_frequencies(self.ham_word_counts)
 
         # Create subplots
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+        _, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
 
         # Display the spam word cloud
         ax1.imshow(spam_wordcloud, interpolation="bilinear")
@@ -151,7 +148,7 @@ class NaiveBayesClassifier:
         plt.tight_layout()
         plt.show()
 
-    def visualize_data_summary(self):
+    def visualize_data_summary(self) -> None:
         # Create a figure for the pie chart
         plt.figure(figsize=(6, 6))
 
@@ -166,7 +163,7 @@ class NaiveBayesClassifier:
 
         plt.show()
 
-    def _classify(self, words: list[str]) -> tuple[float, float]:
+    def _classify(self, words: list[str]) -> float:
         """
         Classifies a text as spam or ham.
 
@@ -178,16 +175,20 @@ class NaiveBayesClassifier:
 
         """
 
-        # Add log probabilities of each word
+        # Find "log-likelihood ratio" of the text being spam 
         # https://en.wikipedia.org/wiki/Naive_Bayes_classifier#Document_classification
-        result = math.log(self.prior_spam / self.prior_ham)
+
+        log_spam_likelihood = math.log(self.prior_spam / self.prior_ham)
+
         for word in words:
-            result += math.log(
+            log_spam_likelihood += math.log(
                 (self.spam_word_counts[word] + 1) / (self.ham_word_counts[word] + 1)
             )
 
-        spam = math.exp(result) / (1 + math.exp(result))
-        return spam, 1 - spam
+        # Find P(spam | text) using the log probability
+        spam_probability = math.exp(log_spam_likelihood) / (1 + math.exp(log_spam_likelihood))
+
+        return spam_probability
 
     def test(self, testing_data: list, window_size=WINDOW_SIZE) -> None:
         """
@@ -206,39 +207,40 @@ class NaiveBayesClassifier:
             window = [
                 a[0] for a in processed_training_data[index : index + window_size]
             ]
-            spam, ham = self._classify(window)
+            spam = self._classify(window)
 
             for word in words[index : index + window_size]:
-                word.insert_propability(spam, ham)
+                word.insert_propability(spam)
 
         if len(processed_training_data) < window_size:
             window = [a[0] for a in processed_training_data]
-            spam, ham = self._classify(window)
+            spam = self._classify(window)
 
             for word in words:
-                word.insert_propability(spam, ham)
+                word.insert_propability(spam)
 
         plt.figure(figsize=(10, 6))
 
         spam_score = []
-        ham_score = []
         timestamps = []
 
         for index, word in enumerate(words):
             time = datetime.timedelta(seconds=processed_training_data[index][1])
             timestamps.append(processed_training_data[index][1])
             if word.average_spam > 0.8:
-                print(f"Spam: {time}")
+                print(f"Spam: {time} - {word.word}")
             spam_score.append(word.average_spam)
-            ham_score.append(word.average_ham)
 
         # Create a plot for the spam and ham scores
 
         plt.plot(timestamps, spam_score, label="Spam")
-        plt.plot(timestamps, ham_score, label="Ham")
 
         plt.xlabel("Time")
         plt.ylabel("Score")
+
+        plt.title("Spam Score")
+
+        #Format the x-axis as time
 
         plt.legend()
 
