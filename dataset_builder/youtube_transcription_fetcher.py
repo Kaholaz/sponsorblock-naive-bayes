@@ -10,16 +10,17 @@
         the type of transcript (manual or auto).
 """
 from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
+from config import ROOT_DIR
 import pandas as pd
 import json
 import os
 import re
 
-processed_sponsorTimes_dir = "sponsor_data/"
-processed_sponsorTimes_path = processed_sponsorTimes_dir + "processed_sponsorTimes.csv"
+processedSponsorTimesDir = ROOT_DIR + "/dataset_builder/sponsor_data/"
+processedSponsorTimesPath = processedSponsorTimesDir + "processed_sponsorTimes.csv"
+os.makedirs(processedSponsorTimesDir, exist_ok=True)
 
-transcriptionDir = "transcriptions/"
-os.makedirs(transcriptionDir, exist_ok=True)
+transcriptionDir = ROOT_DIR + "/transcriptions/"
 
 manualTranscriptionPath = transcriptionDir + "youtube_manual_transcriptions.json"
 autoTranscriptionPath = transcriptionDir + "youtube_auto_transcriptions.json"
@@ -58,10 +59,10 @@ def build_dataset() -> None:
     Creates a dataset for both manually translated transcripts, or if there are none,
         it checks for auto generated ones.
 
-    Everything is saved inside the transcriptions/ directory.
+    Everything is saved inside the ../transcriptions/ directory.
     :return:
     """
-    df_video_sponsor_data = pd.read_csv(processed_sponsorTimes_path)  # , nrows=videoID_count_to_check)
+    df_video_sponsor_data = pd.read_csv(processedSponsorTimesPath)  # , nrows=videoID_count_to_check)
 
     grouped_sponsor_data = df_video_sponsor_data.groupby("videoID", sort=False)
     # for video_id, group in groupedSponsorData:
