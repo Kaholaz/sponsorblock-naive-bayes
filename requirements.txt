@@ -67,3 +67,4 @@ whisper-timestamped==1.12.20
 wordcloud==1.9.2
 yt-dlp==2023.10.13
 youtube_transcript_api
+fasttext-wheel
