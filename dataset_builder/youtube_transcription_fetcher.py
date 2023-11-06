@@ -15,7 +15,8 @@ import json
 import os
 import re
 
-processed_sponsorTimes_path = ".idea/processed_sponsorTimes.csv"
+processed_sponsorTimes_dir = "sponsor_data/"
+processed_sponsorTimes_path = processed_sponsorTimes_dir + "processed_sponsorTimes.csv"
 
 transcriptionDir = "transcriptions/"
 os.makedirs(transcriptionDir, exist_ok=True)
@@ -51,15 +52,6 @@ def video_id_exists_in_file(file_path: str, video_id: str) -> bool:
         return False
 
 
-dfVideoSponsorData = pd.read_csv(processed_sponsorTimes_path)  # , nrows=videoID_count_to_check)
-
-groupedSponsorData = dfVideoSponsorData.groupby("videoID", sort=False)
-
-
-# for video_id, group in groupedSponsorData:
-#    print(video_id, "\n", group, zip(group["startTime"], group["endTime"]))
-
-
 def build_dataset() -> None:
     """
     Builds a dataset of video transcripts by using video ids from processed sponsorTimes.csv to fetch.
@@ -69,9 +61,15 @@ def build_dataset() -> None:
     Everything is saved inside the transcriptions/ directory.
     :return:
     """
+    df_video_sponsor_data = pd.read_csv(processed_sponsorTimes_path)  # , nrows=videoID_count_to_check)
+
+    grouped_sponsor_data = df_video_sponsor_data.groupby("videoID", sort=False)
+    # for video_id, group in groupedSponsorData:
+    #    print(video_id, "\n", group, zip(group["startTime"], group["endTime"]))
+
     reg1 = re.compile(r"\s*[(\[](\s|\w)*[])]")
     reg2 = re.compile(r"([\n\"\-,^\s._])+")
-    for video_id, group in groupedSponsorData:
+    for video_id, group in grouped_sponsor_data:
         all_sponsor_segments = list(zip(group["startTime"], group["endTime"]))
         video_id = str(video_id)
 
@@ -149,26 +147,26 @@ def build_dataset() -> None:
 
 
 def dataset_file_to_df(file_path: str) -> pd.DataFrame:
-    transcript_data = []
+    """
+    Converts json dataset file to a pandas dataframe of transcriptions
+
+    :param file_path: Path to the json dataset file
+    :return: Pandas dataframe of the dataset
+    """
     with open(file_path, "r") as file:
-        for line in file:
-            json_line = json.loads(line)
-            for transcript in json_line["transcript"]:
-                transcript_data.append({
-                    "text": transcript["text"],
-                    "start": transcript["start"],
-                    "duration": transcript["duration"],
-                    "ad": transcript["ad"]
-                })
-    return pd.DataFrame(transcript_data)
+        temp = pd.read_json(file, lines=True)
+        temp = temp[temp["transcript"].str.len() > 0].explode("transcript")
+
+    return pd.DataFrame(list(temp["transcript"]))
 
 
-build_dataset()
+if __name__ == "__main__":
+    build_dataset()
 
-# dfTranscripts = dataset_file_to_df(manualTranscriptionPath)
+    dfTranscripts = dataset_file_to_df(manualTranscriptionPath)
 
-# print(dfTranscripts)
+    print(dfTranscripts)
 
-# dfTranscripts = dataset_file_to_df(autoTranscriptionPath)
+    dfTranscripts = dataset_file_to_df(autoTranscriptionPath)
 
-# print(dfTranscripts)
+    print(dfTranscripts)
