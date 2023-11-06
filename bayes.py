@@ -14,13 +14,14 @@ from tqdm import tqdm
 
 WINDOW_SIZE = 50
 
+
 @dataclass
 class Word:
     word: str
     total_spam: float = 0
     total_ham: float = 0
     runs: int = 0
-    
+
     @property
     def average_spam(self):
         return self.total_spam / self.runs
@@ -33,6 +34,7 @@ class Word:
         self.total_ham += ham
         self.total_spam += spam
         self.runs += 1
+
 
 class NaiveBayesClassifier:
     def __init__(self, training_data: list = None):
@@ -176,22 +178,16 @@ class NaiveBayesClassifier:
 
         """
 
-        log_prob_spam = math.log(self.prior_spam)
-        log_prob_ham = math.log(self.prior_ham)
-
         # Add log probabilities of each word
         # https://en.wikipedia.org/wiki/Naive_Bayes_classifier#Document_classification
+        result = math.log(self.prior_spam / self.prior_ham)
         for word in words:
-            log_prob_spam += math.log(
-                (self.spam_word_counts[word] + 1)
-                / (self.total_spam + len(self.spam_word_counts))
-            )
-            log_prob_ham += math.log(
-                (self.ham_word_counts[word] + 1)
-                / (self.total_ham + len(self.ham_word_counts))
+            result += math.log(
+                (self.spam_word_counts[word] + 1) / (self.ham_word_counts[word] + 1)
             )
 
-        return [log_prob_spam, log_prob_ham]
+        spam = math.exp(result) / (1 + math.exp(result))
+        return spam, 1 - spam
 
     def test(self, testing_data: list, window_size=WINDOW_SIZE) -> None:
         """
