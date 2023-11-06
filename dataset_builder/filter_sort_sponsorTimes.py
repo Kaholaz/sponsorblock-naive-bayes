@@ -51,23 +51,28 @@ def get_categories(video_ids: list) -> dict[str, str]:
     return video_categories
 
 
-for chunk in pd.read_csv(sponsorTimes_path, usecols=["videoID", "startTime", "endTime", "views", "votes", "category"],
-                         chunksize=chunk_size):
-    filteredChunk = chunk[(chunk["votes"] >= 3) & (chunk["category"] == "sponsor")]
-    chunks.append(filteredChunk)
+if __name__ == "__main__":
+    try:
+        for chunk in pd.read_csv(sponsorTimes_path, usecols=["videoID", "startTime", "endTime", "views", "votes", "category"],
+                                 chunksize=chunk_size):
+            filteredChunk = chunk[(chunk["votes"] >= 3) & (chunk["category"] == "sponsor")]
+            chunks.append(filteredChunk)
+    except FileNotFoundError as e:
+        print(f"No sponsorTime.csv data file was found: {e}")
+        exit(1)
 
-dfCombined = pd.concat(chunks)
+    dfCombined = pd.concat(chunks)
 
-dfSorted = dfCombined.sort_values(by="views", ascending=False)
+    dfSorted = dfCombined.sort_values(by="views", ascending=False)
 
-uniqueVideoIds = dfSorted["videoID"].unique().tolist()
+    uniqueVideoIds = dfSorted["videoID"].unique().tolist()
 
-videoCategories = get_categories(uniqueVideoIds)
+    videoCategories = get_categories(uniqueVideoIds)
 
-musicVideos = {video_id for video_id, category_id in videoCategories.items() if category_id == "10"}
+    musicVideos = {video_id for video_id, category_id in videoCategories.items() if category_id == "10"}
 
-dfSorted = dfSorted[~dfSorted["videoID"].isin(musicVideos)]
+    dfSorted = dfSorted[~dfSorted["videoID"].isin(musicVideos)]
 
-dfSorted.to_csv(processed_sponsorTimes_path, index=False)
+    dfSorted.to_csv(processed_sponsorTimes_path, index=False)
 
-print(f"Filtered out video ids classified as music, total {len(musicVideos)} videos:\n{musicVideos}")
+    print(f"Filtered out video ids classified as music, total {len(musicVideos)} videos:\n{musicVideos}")
