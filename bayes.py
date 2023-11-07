@@ -184,13 +184,15 @@ class NaiveBayesClassifier:
         spam_score = []
         timestamps = []
 
+        print(f"Spam words ({ham_threshold} threshold):")
         for index, word in enumerate(clean_data):
             timestamps.append(word.timestamp)
             spam_score.append(word.average_spam)
 
             if word.average_spam > ham_threshold:
                 timestamp = datetime.timedelta(seconds=word.timestamp)
-                print(f"Spam: {timestamp} - {word.word}")
+                max_width = 20  # Adjust this value to your desired column width
+                print(f"Spam: {str(timestamp).ljust(max_width)}Word: {word.word.ljust(max_width)}Ad: {str(word.ad).ljust(max_width)}Average spam: {word.average_spam}")
 
         
         self.plot_spam_score(timestamps, spam_score)
