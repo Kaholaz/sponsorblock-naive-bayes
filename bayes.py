@@ -14,6 +14,7 @@ from tqdm import tqdm
 
 WINDOW_SIZE = 50
 HAM_THRESHOLD = 0.8
+ALPHA = 1
 
 
 @dataclass
@@ -133,7 +134,7 @@ class NaiveBayesClassifier:
             {k: v * (1 / self.prior_ham) for k, v in self.ham_word_counts.items()},
         )
 
-    def classify(self, words: list[Word]) -> float:
+    def classify(self, words: list[Word], alpha=ALPHA) -> float:
         """
         Classifies a list of words as spam or ham.
 
@@ -152,8 +153,8 @@ class NaiveBayesClassifier:
 
         for word in words:
             log_spam_likelihood += math.log(
-                (self.spam_word_counts[word.word] + 1)
-                / (self.ham_word_counts[word.word] + 1)
+                (self.spam_word_counts[word.word] + alpha)
+                / (self.ham_word_counts[word.word] + alpha)
             )
 
         # Find P(spam | text) using the log probability
