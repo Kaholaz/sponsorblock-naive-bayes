@@ -36,7 +36,9 @@ class TranscriptionFileHandler:
         for index, video in enumerate(videos):
             video_id = get_video_id(video)
             transcription = transcribe(video_id)
-            with open(f"{self.path}{file_type.value}/{index}.csv", "w", encoding="UTF-8") as f:
+            with open(
+                f"{self.path}{file_type.value}/{index}.csv", "w", encoding="UTF-8"
+            ) as f:
                 transcription.to_csv(f, index=False)
 
     def check_resouce_exists(self) -> bool:

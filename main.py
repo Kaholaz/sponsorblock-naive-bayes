@@ -3,20 +3,23 @@ from files import TranscriptionFileHandler, FileType
 from transcribe import *
 import nltk
 
+
 def download_nltk_data():
     try:
-        nltk.data.find('tokenizers/punkt')
-        nltk.data.find('corpora/stopwords')
-        nltk.data.find('corpora/wordnet')
+        nltk.data.find("tokenizers/punkt")
+        nltk.data.find("corpora/stopwords")
+        nltk.data.find("corpora/wordnet")
     except LookupError:
-        nltk.download('punkt')
-        nltk.download('stopwords')
-        nltk.download('wordnet')
-#download_nltk_data()
+        nltk.download("punkt")
+        nltk.download("stopwords")
+        nltk.download("wordnet")
+
+
+# download_nltk_data()
 
 
 def main():
-    #transcribe_ads_data()
+    # transcribe_ads_data()
     training_videos = [
         "https://www.youtube.com/watch?v=mXBzBFxe00o",
         "https://www.youtube.com/watch?v=jCuEBVbmPcA",
@@ -40,17 +43,16 @@ def main():
 
     bayes.train()
 
-    #bayes.visualize_words()
-    #bayes.visualize_data_summary()
+    # bayes.visualize_words()
+    # bayes.visualize_data_summary()
 
     bayes.test(testing_data=testing_data)
 
 
-
 def transcribe_ads_data():
     videos = [
-            "https://www.youtube.com/watch?v=mXBzBFxe00o",
-        ]
+        "https://www.youtube.com/watch?v=mXBzBFxe00o",
+    ]
     for index, video in enumerate(videos):
         video_id = get_video_id(video)
         transcription = transcribe_ads(video_id)
