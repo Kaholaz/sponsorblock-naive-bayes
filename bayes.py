@@ -19,6 +19,8 @@ HAM_THRESHOLD = 0.8
 @dataclass
 class Word:
     word: str
+    timestamp: int
+    ad : bool = False
     total_spam_probability: float = 0
     runs: int = 0
 
@@ -61,8 +63,8 @@ class NaiveBayesClassifier:
 
         """
 
-        clean_word = re.sub(r"[^a-zA-Z\s]", "", word).lower()
-        clean_word = str(clean_word)
+        clean_word = str(word)
+        clean_word = re.sub(r"[^a-zA-Z\s]", "", clean_word).lower()
 
         # tokens = word_tokenize(text)
         # stopword_list = stopwords.words("english")
@@ -71,22 +73,20 @@ class NaiveBayesClassifier:
 
         # text = " ".join(tokens)
 
-        if clean_word == "":
-            raise ValueError("Text is empty after preprocessing.")
-
         return clean_word
 
-    def preprocess_list(self, text: list) -> list:
+    def preprocess_list(self, text: list) -> list[Word]:
         preprocessed_text = []
         print("Preprocessing text...")
         for word in tqdm(text):
-            try:
-                item = list(word)
-                item[0] = str(item[0])
-                item[0] = self.preprocess_word(item[0])
-                preprocessed_text.append(item)
-            except ValueError:
+            clean_word = self.preprocess_word(word[0])
+
+            if clean_word == "":
                 continue
+
+            obj = Word(word=clean_word, timestamp=word[1], ad=word[2])
+            preprocessed_text.append(obj)
+
         return preprocessed_text
 
     def train(self) -> None:
@@ -95,16 +95,17 @@ class NaiveBayesClassifier:
         and calculates the prior probabilities for spam and ham.
 
         """
-        data = self.preprocess_list(self.training_data)
+        clean_data = self.preprocess_list(self.training_data)
 
         # Count the number of occurrences of each word in spam and ham emails
-        for word, _, ad in data:
-            if ad:
+        print("Training...")
+        for word in tqdm(clean_data):
+            if word.ad:
                 self.total_spam += 1
-                self.spam_word_counts[word] += 1
+                self.spam_word_counts[word.word] += 1
             else:
                 self.total_ham += 1
-                self.ham_word_counts[word] += 1
+                self.ham_word_counts[word.word] += 1
 
         # Calculate prior probabilities (P(spam) and P(ham))
         self.prior_spam = self.total_spam / (self.total_spam + self.total_ham)
@@ -163,7 +164,7 @@ class NaiveBayesClassifier:
 
         plt.show()
 
-    def _classify(self, words: list[str]) -> float:
+    def _classify(self, words: list[Word]) -> float:
         """
         Classifies a text as spam or ham.
 
@@ -182,7 +183,7 @@ class NaiveBayesClassifier:
 
         for word in words:
             log_spam_likelihood += math.log(
-                (self.spam_word_counts[word] + 1) / (self.ham_word_counts[word] + 1)
+                (self.spam_word_counts[word.word] + 1) / (self.ham_word_counts[word.word] + 1)
             )
 
         # Find P(spam | text) using the log probability
@@ -216,37 +217,35 @@ class NaiveBayesClassifier:
 
         """
 
-        processed_training_data = self.preprocess_list(testing_data)
-        words = [Word(a[0]) for a in processed_training_data]
+        clean_data = self.preprocess_list(testing_data)
 
         # Make sure the window size is not larger than the data
-        if len(processed_training_data) < window_size:
-            window_size = len(processed_training_data)
+        if len(clean_data) < window_size:
+            window_size = len(clean_data)
 
         # Use a sliding window to classify the words
-        for index in range(len(processed_training_data[: -window_size + 1])):
-            window = [
-                a[0] for a in processed_training_data[index : index + window_size]
-            ]
+        for index in range(len(clean_data[: -window_size + 1])):
+            window = clean_data[index : index + window_size]
 
             spam = self._classify(window)
 
             # Insert the spam probability for each word in the window
-            for word in words[index : index + window_size]:
+            for window_index in range(len(window)):
+                word = clean_data[window_index + index]
                 word.insert_propability(spam)
 
 
         spam_score = []
         timestamps = []
 
-        for index, word in enumerate(words):
-            time = datetime.timedelta(seconds=processed_training_data[index][1])
-            timestamps.append(processed_training_data[index][1])
+        for index, word in enumerate(clean_data):
+            timestamps.append(word.timestamp)
+            spam_score.append(word.average_spam)
 
             if word.average_spam > ham_threshold:
-                print(f"Spam: {time} - {word.word}")
+                timestamp = datetime.timedelta(seconds=word.timestamp)
+                print(f"Spam: {timestamp} - {word.word}")
 
-            spam_score.append(word.average_spam)
         
         self.plot_spam_score(timestamps, spam_score)
 
