@@ -20,7 +20,7 @@ HAM_THRESHOLD = 0.8
 class Word:
     word: str
     timestamp: int
-    ad : bool = False
+    ad: bool = False
     total_spam_probability: float = 0
     runs: int = 0
 
@@ -121,7 +121,6 @@ class NaiveBayesClassifier:
             {k: v * (1 / self.prior_ham) for k, v in self.ham_word_counts.items()},
         )
 
-
     def _classify(self, words: list[Word]) -> float:
         """
         Classifies a text as spam or ham.
@@ -141,7 +140,8 @@ class NaiveBayesClassifier:
 
         for word in words:
             log_spam_likelihood += math.log(
-                (self.spam_word_counts[word.word] + 1) / (self.ham_word_counts[word.word] + 1)
+                (self.spam_word_counts[word.word] + 1)
+                / (self.ham_word_counts[word.word] + 1)
             )
 
         # Find P(spam | text) using the log probability
@@ -150,7 +150,7 @@ class NaiveBayesClassifier:
         )
 
         return spam_probability
-    
+
     def test(
         self, testing_data: list, window_size=WINDOW_SIZE, ham_threshold=HAM_THRESHOLD
     ) -> None:
@@ -180,7 +180,6 @@ class NaiveBayesClassifier:
                 word = clean_data[window_index + index]
                 word.insert_propability(spam)
 
-
         spam_score = []
         timestamps = []
 
@@ -192,11 +191,11 @@ class NaiveBayesClassifier:
             if word.average_spam > ham_threshold:
                 timestamp = datetime.timedelta(seconds=word.timestamp)
                 max_width = 20  # Adjust this value to your desired column width
-                print(f"Spam: {str(timestamp).ljust(max_width)}Word: {word.word.ljust(max_width)}Ad: {str(word.ad).ljust(max_width)}Average spam: {word.average_spam}")
+                print(
+                    f"Spam: {str(timestamp).ljust(max_width)}Word: {word.word.ljust(max_width)}Ad: {str(word.ad).ljust(max_width)}Average spam: {word.average_spam}"
+                )
 
-        
         self.plot_spam_score(timestamps, spam_score)
-
 
     def visualize_words(self) -> None:
         # Generate word cloud for spam words
@@ -252,4 +251,3 @@ class NaiveBayesClassifier:
         plt.legend()
 
         plt.show()
-
