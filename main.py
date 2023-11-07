@@ -1,6 +1,6 @@
-from bayes import NaiveBayesClassifier
+from bayes import NaiveBayesClassifier, visualize_words, visualize_data_summary
 from files import TranscriptionFileHandler, FileType
-from transcribe import *
+from transcribe import get_video_id, transcribe_ads
 import nltk
 
 
@@ -39,14 +39,14 @@ def main():
     training_data = files.load_data(FileType.TRAINING)
     testing_data = files.load_data(FileType.TESTING)
 
-    bayes = NaiveBayesClassifier(training_data=training_data)
+    model = NaiveBayesClassifier(training_data=training_data)
 
-    bayes.train()
+    model.train()
+    visualize_words(model)
+    visualize_data_summary(model)
 
-    # bayes.visualize_words()
-    # bayes.visualize_data_summary()
-
-    bayes.test(testing_data=testing_data)
+    classification = model.classify_text(testing_data=testing_data)
+    model.evaluate_classification(classification)
 
 
 def transcribe_ads_data():

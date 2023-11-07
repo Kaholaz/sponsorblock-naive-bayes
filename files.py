@@ -2,12 +2,20 @@ import pandas as pd
 from enum import Enum
 import os
 from transcribe import transcribe, get_video_id
+from dataclasses import dataclass
 
 
 class FileType(Enum):
     TRAINING = "training"
     TESTING = "testing"
     ROOT = ""
+
+
+@dataclass
+class AdTaggedWord:
+    word: str
+    start: float
+    ad: bool
 
 
 DEFAULT_TRANSCRIPTION_PATH = "transcriptions/"
@@ -17,7 +25,7 @@ class TranscriptionFileHandler:
     def __init__(self, path=DEFAULT_TRANSCRIPTION_PATH) -> None:
         self.path = path
 
-    def load_data(self, file_type: FileType) -> list:
+    def load_data(self, file_type: FileType) -> list[AdTaggedWord]:
         training_data = []
 
         files = os.listdir(f"{self.path}{file_type.value}")
@@ -25,11 +33,13 @@ class TranscriptionFileHandler:
         for file in files:
             with open(f"{self.path}{file_type.value}/{file}", encoding="UTF-8") as f:
                 data = pd.read_csv(f)
-            training_data.extend(list(zip(data["word"], data["start"], data["ad"])))
+            training_data.extend(
+                AdTaggedWord(*z) for z in zip(data["word"], data["start"], data["ad"])
+            )
 
         return training_data
 
-    def transcribe_and_save_videos(self, videos: [str], file_type: FileType):
+    def transcribe_and_save_videos(self, videos: [str], file_type: FileType) -> None:
         if not os.path.exists(self.path + file_type.value):
             os.makedirs(self.path + file_type.value)
 
