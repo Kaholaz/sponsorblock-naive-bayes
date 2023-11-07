@@ -37,11 +37,8 @@ def substitution_preprocessor(word: str) -> str:
     """
     Preprocesses the input text by removing non-alphanumeric characters and converting it to lowercase.
 
-    Args:
-        text (str): The text to preprocess.
-
-    Returns:
-        list: A list of preprocessed words in the text.
+    :arg text: The text to preprocess.
+    :return: The preprocessed text.
 
     """
     clean_word = str(word)
@@ -113,7 +110,6 @@ class NaiveBayesClassifier:
         """
         Trains the Naive Bayes classifier. This method counts the number of words in spam and ham emails
         and calculates the prior probabilities for spam and ham.
-
         """
 
         clean_data = self.preprocess_words(self.training_data)
@@ -142,16 +138,13 @@ class NaiveBayesClassifier:
             {k: v * (1 / self.prior_ham) for k, v in self.ham_word_counts.items()},
         )
 
-    def classify_window(self, words: list[Word], alpha=ALPHA) -> float:
+    def classify_window(self, words: list[Word], alpha: float=ALPHA) -> float:
         """
         Classifies a list of words as spam or ham.
 
-        Args:
-            text (str): The text to classify.
-
-        Returns:
-            spam_probability (float): A float between 0 and 1, indicating the probability of the text being spam.
-
+        :arg text: The text to classify.
+        :arg alpha: The value to add to
+        :return: Returns a float between 0 and 1, indicating the probability of the text being spam.
         """
 
         # Find "log-likelihood ratio" of the text being spam
@@ -177,11 +170,10 @@ class NaiveBayesClassifier:
     ) -> list[Word]:
         """
         Tests a list of texts and classifies them as spam or ham using a sliding window.
-
-        Args:
-            testing_data (list): A list of texts to classify_window. Each element should contain word, start.
-            window_size (int): The size of the sliding window.
-            ham_threshold (float): The threshold for classifying a word as spam.
+        :arg testing_data: A list of texts to classify_window. Each element should contain word, start.
+        :arg window_size: The size of the sliding window.
+        :arg ham_threshold: The threshold for classifying a word as spam.
+        :return: Returns a list of classified words.
         """
 
         clean_data = self.preprocess_words(testing_data)
