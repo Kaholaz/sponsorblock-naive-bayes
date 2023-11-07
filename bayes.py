@@ -76,6 +76,17 @@ class NaiveBayesClassifier:
         return clean_word
 
     def preprocess_list(self, text: list) -> list[Word]:
+        """
+
+        Preprocesses a list of words 
+
+        Args:
+            text (list): input text
+
+        Returns:
+            list[Word]: processed text
+        """
+
         preprocessed_text = []
         print("Preprocessing text...")
         for word in tqdm(text):
@@ -95,6 +106,7 @@ class NaiveBayesClassifier:
         and calculates the prior probabilities for spam and ham.
 
         """
+
         clean_data = self.preprocess_list(self.training_data)
 
         # Count the number of occurrences of each word in spam and ham emails
@@ -121,15 +133,15 @@ class NaiveBayesClassifier:
             {k: v * (1 / self.prior_ham) for k, v in self.ham_word_counts.items()},
         )
 
-    def _classify(self, words: list[Word]) -> float:
+    def classify(self, words: list[Word]) -> float:
         """
-        Classifies a text as spam or ham.
+        Classifies a list of words as spam or ham.
 
         Args:
             text (str): The text to classify.
 
         Returns:
-            list: A list containing the log probability of the text being spam and the log probability of the text being ham.
+            spam_probability (float): A float between 0 and 1, indicating the probability of the text being spam.
 
         """
 
@@ -160,7 +172,7 @@ class NaiveBayesClassifier:
         Args:
             testing_data (list): A list of texts to classify. Each element should contain word, start.
             window_size (int): The size of the sliding window.
-
+            ham_threshold (float): The threshold for classifying a word as spam.
         """
 
         clean_data = self.preprocess_list(testing_data)
@@ -173,7 +185,7 @@ class NaiveBayesClassifier:
         for index in range(len(clean_data[: -window_size + 1])):
             window = clean_data[index : index + window_size]
 
-            spam = self._classify(window)
+            spam = self.classify(window)
 
             # Insert the spam probability for each word in the window
             for window_index in range(len(window)):
@@ -240,7 +252,7 @@ class NaiveBayesClassifier:
 
         plt.show()
 
-    def plot_spam_score(self, timestamps, spam_score):
+    def plot_spam_score(self, timestamps: list[int], spam_score:list[float]) -> None:
         plt.figure(figsize=(10, 6))
         plt.plot(timestamps, spam_score, label="Spam")
 
