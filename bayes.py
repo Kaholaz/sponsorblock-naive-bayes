@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 
 WINDOW_SIZE = 50
+HAM_THRESHOLD = 0.8
 
 
 @dataclass
@@ -190,7 +191,7 @@ class NaiveBayesClassifier:
 
         return spam_probability
 
-    def test(self, testing_data: list, window_size=WINDOW_SIZE) -> None:
+    def test(self, testing_data: list, window_size=WINDOW_SIZE, ham_threshold=HAM_THRESHOLD) -> None:
         """
         Tests a list of texts and classifies them as spam or ham using a sliding window.
 
@@ -227,8 +228,10 @@ class NaiveBayesClassifier:
         for index, word in enumerate(words):
             time = datetime.timedelta(seconds=processed_training_data[index][1])
             timestamps.append(processed_training_data[index][1])
-            if word.average_spam > 0.8:
+
+            if word.average_spam > ham_threshold:
                 print(f"Spam: {time} - {word.word}")
+
             spam_score.append(word.average_spam)
 
         # Create a plot for the spam and ham scores
