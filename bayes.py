@@ -106,7 +106,6 @@ class NaiveBayesClassifier:
                 self.total_ham += 1
                 self.ham_word_counts[word] += 1
 
-
         # Calculate prior probabilities (P(spam) and P(ham))
         self.prior_spam = self.total_spam / (self.total_spam + self.total_ham)
         self.prior_ham = self.total_ham / (self.total_spam + self.total_ham)
@@ -117,9 +116,9 @@ class NaiveBayesClassifier:
             {k: v * (1 / self.prior_spam) for k, v in self.spam_word_counts.items()},
         )
         self.ham_word_counts = defaultdict(
-            lambda: 0, {k: v * (1 / self.prior_ham) for k, v in self.ham_word_counts.items()}
+            lambda: 0,
+            {k: v * (1 / self.prior_ham) for k, v in self.ham_word_counts.items()},
         )
-
 
     def visualize_words(self) -> None:
         # Generate word cloud for spam words
@@ -176,7 +175,7 @@ class NaiveBayesClassifier:
 
         """
 
-        # Find "log-likelihood ratio" of the text being spam 
+        # Find "log-likelihood ratio" of the text being spam
         # https://en.wikipedia.org/wiki/Naive_Bayes_classifier#Document_classification
 
         log_spam_likelihood = math.log(self.prior_spam / self.prior_ham)
@@ -187,11 +186,27 @@ class NaiveBayesClassifier:
             )
 
         # Find P(spam | text) using the log probability
-        spam_probability = math.exp(log_spam_likelihood) / (1 + math.exp(log_spam_likelihood))
+        spam_probability = math.exp(log_spam_likelihood) / (
+            1 + math.exp(log_spam_likelihood)
+        )
 
         return spam_probability
+    
+    def plot_spam_score(self, timestamps, spam_score):
+        plt.figure(figsize=(10, 6))
+        plt.plot(timestamps, spam_score, label="Spam")
 
-    def test(self, testing_data: list, window_size=WINDOW_SIZE, ham_threshold=HAM_THRESHOLD) -> None:
+        plt.title("Spam Score")
+        plt.xlabel("Time")
+        plt.ylabel("Score")
+
+        plt.legend()
+
+        plt.show()
+
+    def test(
+        self, testing_data: list, window_size=WINDOW_SIZE, ham_threshold=HAM_THRESHOLD
+    ) -> None:
         """
         Tests a list of texts and classifies them as spam or ham using a sliding window.
 
@@ -204,23 +219,22 @@ class NaiveBayesClassifier:
         processed_training_data = self.preprocess_list(testing_data)
         words = [Word(a[0]) for a in processed_training_data]
 
+        # Make sure the window size is not larger than the data
+        if len(processed_training_data) < window_size:
+            window_size = len(processed_training_data)
+
+        # Use a sliding window to classify the words
         for index in range(len(processed_training_data[: -window_size + 1])):
             window = [
                 a[0] for a in processed_training_data[index : index + window_size]
             ]
+
             spam = self._classify(window)
 
+            # Insert the spam probability for each word in the window
             for word in words[index : index + window_size]:
                 word.insert_propability(spam)
 
-        if len(processed_training_data) < window_size:
-            window = [a[0] for a in processed_training_data]
-            spam = self._classify(window)
-
-            for word in words:
-                word.insert_propability(spam)
-
-        plt.figure(figsize=(10, 6))
 
         spam_score = []
         timestamps = []
@@ -233,18 +247,7 @@ class NaiveBayesClassifier:
                 print(f"Spam: {time} - {word.word}")
 
             spam_score.append(word.average_spam)
+        
+        self.plot_spam_score(timestamps, spam_score)
 
-        # Create a plot for the spam and ham scores
 
-        plt.plot(timestamps, spam_score, label="Spam")
-
-        plt.xlabel("Time")
-        plt.ylabel("Score")
-
-        plt.title("Spam Score")
-
-        #Format the x-axis as time
-
-        plt.legend()
-
-        plt.show()
