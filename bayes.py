@@ -4,6 +4,7 @@ import math
 import datetime
 import pandas
 from collections import defaultdict
+from typing import Optional
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
@@ -35,7 +36,7 @@ class Word:
 
 
 class NaiveBayesClassifier:
-    def __init__(self, training_data: list = []):
+    def __init__(self, training_data: Optional[list] = None):
         """
         Initializes a Naive Bayes classifier with the provided training data.
 
@@ -43,6 +44,8 @@ class NaiveBayesClassifier:
             training_data (list): A list of tuples, each containing a text and its label ("spam" or "ham").
 
         """
+        if training_data is None:
+            training_data = []
 
         self.training_data = training_data
         self.spam_word_counts = defaultdict(float)
