@@ -1,7 +1,7 @@
 import pandas as pd
 from enum import Enum
 import os
-from transcribe import transcribe, get_video_id
+from transcribe import transcribe_video, get_video_id
 from dataclasses import dataclass
 
 
@@ -45,7 +45,7 @@ class TranscriptionFileHandler:
 
         for index, video in enumerate(videos):
             video_id = get_video_id(video)
-            transcription = transcribe(video_id)
+            transcription = transcribe_video(video_id)
             with open(
                 f"{self.path}{file_type.value}/{index}.csv", "w", encoding="UTF-8"
             ) as f:
