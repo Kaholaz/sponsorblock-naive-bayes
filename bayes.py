@@ -78,7 +78,7 @@ class NaiveBayesClassifier:
     def preprocess_list(self, text: list) -> list[Word]:
         """
 
-        Preprocesses a list of words 
+        Preprocesses a list of words
 
         Args:
             text (list): input text
@@ -195,10 +195,17 @@ class NaiveBayesClassifier:
         spam_score = []
         timestamps = []
 
+        failed_predictions = 0
+
         print(f"Spam words ({ham_threshold} threshold):")
         for index, word in enumerate(clean_data):
             timestamps.append(word.timestamp)
             spam_score.append(word.average_spam)
+
+            if (clean_data[index].ad and word.average_spam < ham_threshold) or (
+                not clean_data[index].ad and word.average_spam > ham_threshold
+            ):
+                failed_predictions += 1
 
             if word.average_spam > ham_threshold:
                 timestamp = datetime.timedelta(seconds=word.timestamp)
@@ -206,6 +213,7 @@ class NaiveBayesClassifier:
                 print(
                     f"Spam: {str(timestamp).ljust(max_width)}Word: {word.word.ljust(max_width)}Ad: {str(word.ad).ljust(max_width)}Average spam: {word.average_spam}"
                 )
+        print("\nAccuracy:", 1 - (failed_predictions / len(clean_data)))
 
         self.plot_spam_score(timestamps, spam_score)
 
@@ -252,7 +260,7 @@ class NaiveBayesClassifier:
 
         plt.show()
 
-    def plot_spam_score(self, timestamps: list[int], spam_score:list[float]) -> None:
+    def plot_spam_score(self, timestamps: list[int], spam_score: list[float]) -> None:
         plt.figure(figsize=(10, 6))
         plt.plot(timestamps, spam_score, label="Spam")
 
