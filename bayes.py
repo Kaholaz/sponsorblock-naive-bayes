@@ -48,7 +48,7 @@ WINDOW_SIZE = 50
 HAM_THRESHOLD = 0.5
 DEFAULT_WORD_CHUNKING = 2
 ALPHA = 1
-DEFAULT_PREPROCESSORD = [substitution_preprocessor]
+DEFAULT_PREPROCESSORS = [substitution_preprocessor]
 
 
 @dataclass
@@ -92,7 +92,7 @@ class NaiveBayesClassifier:
         :return: A list of processed words.
         """
         if preprocessors is None:
-            preprocessors = [substitution_preprocessor]
+            preprocessors = DEFAULT_PREPROCESSORS
 
         preprocessed_text = []
         print("Preprocessing text...")
