@@ -39,11 +39,11 @@ def main():
     training_data = files.load_data(FileType.TRAINING)
     testing_data = files.load_data(FileType.TESTING)
 
-    model = NaiveBayesClassifier(training_data=training_data)
+    model = NaiveBayesClassifier()
 
-    model.train()
-    visualize_words(model)
-    visualize_data_summary(model)
+    model.train(training_data=training_data)
+    #visualize_words(model)
+    #visualize_data_summary(model)
 
     classification = model.classify_text(testing_data=testing_data)
     model.evaluate_classification(classification)
