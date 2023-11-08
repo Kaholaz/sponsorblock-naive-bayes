@@ -11,26 +11,7 @@ from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 from wordcloud import WordCloud
 from matplotlib import pyplot as plt
-from tqdm import tqdm
-
-
-WINDOW_SIZE = 50
-HAM_THRESHOLD = 0.5
-ALPHA = 1
-
-
-@dataclass
-class Word(AdTaggedWord):
-    total_spam_probability: float = 0
-    runs: int = 0
-
-    @cached_property
-    def average_spam(self):
-        return self.total_spam_probability / self.runs
-
-    def insert_propability(self, spam_probability: float):
-        self.total_spam_probability += spam_probability
-        self.runs += 1
+from tqdm import tqdm, trange
 
 
 def substitution_preprocessor(word: str) -> str:
@@ -63,6 +44,27 @@ def stopword_preprocessor(word: str) -> str:
     return clean_word
 
 
+WINDOW_SIZE = 50
+HAM_THRESHOLD = 0.5
+DEFAULT_WORD_CHUNKING = 2
+ALPHA = 1
+DEFAULT_PREPROCESSORD = [substitution_preprocessor]
+
+
+@dataclass
+class Word(AdTaggedWord):
+    total_spam_probability: float = 0
+    runs: int = 0
+
+    @cached_property
+    def average_spam(self):
+        return self.total_spam_probability / self.runs
+
+    def insert_propability(self, spam_probability: float):
+        self.total_spam_probability += spam_probability
+        self.runs += 1
+
+
 @dataclass
 class NaiveBayesClassifier:
     training_data: list[AdTaggedWord] = field(default_factory=list)
@@ -80,6 +82,7 @@ class NaiveBayesClassifier:
     @staticmethod
     def preprocess_words(
         text: list[AdTaggedWord],
+        chunk_words: int = DEFAULT_WORD_CHUNKING,
         preprocessors: Optional[list[Callable[[str], str]]] = None,
     ) -> list[Word]:
         """
@@ -93,16 +96,23 @@ class NaiveBayesClassifier:
 
         preprocessed_text = []
         print("Preprocessing text...")
-        for word in tqdm(text):
-            clean_word = word.word
-            for preprocessor in preprocessors:
-                clean_word = preprocessor(clean_word)
+        for i in trange(len(text) - chunk_words + 1):
+            word_chunk = text[i : i + chunk_words]
+            clean_chunk = []
+            for word in word_chunk:
+                clean_word = word.word
+                for preprocessor in preprocessors:
+                    clean_word = preprocessor(clean_word)
 
-            if clean_word == "":
-                continue
+                if clean_word != "":
+                    clean_chunk.append(clean_word)
 
-            word = Word(word=clean_word, start=word.start, ad=word.ad)
-            preprocessed_text.append(word)
+            if len(clean_chunk):
+                start_word = text[i]
+                word = Word(
+                    word=" ".join(clean_chunk), start=start_word.start, ad=start_word.ad
+                )
+                preprocessed_text.append(word)
 
         return preprocessed_text
 
@@ -138,7 +148,7 @@ class NaiveBayesClassifier:
             {k: v * (1 / self.prior_ham) for k, v in self.ham_word_counts.items()},
         )
 
-    def classify_window(self, words: list[Word], alpha: float=ALPHA) -> float:
+    def classify_window(self, words: list[Word], alpha: float = ALPHA) -> float:
         """
         Classifies a list of words as spam or ham.
 
@@ -267,7 +277,9 @@ def visualize_data_summary(model: NaiveBayesClassifier) -> None:
     plt.show()
 
 
-def plot_spam_score(timestamps: list[int], spam_score: list[float], real_spam_score: list[float]) -> None:
+def plot_spam_score(
+    timestamps: list[int], spam_score: list[float], real_spam_score: list[float]
+) -> None:
     plt.figure(figsize=(10, 6))
     plt.plot(timestamps, spam_score, label="Spam prediction")
     plt.plot(timestamps, real_spam_score, label="Real spam")
