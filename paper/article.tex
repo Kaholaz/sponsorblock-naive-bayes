@@ -1,0 +1,56 @@
+\documentclass[10pt]{article}
+\pdfoutput=1 % For arXiv
+
+\usepackage[preprint]{tmlr}
+\usepackage{rawfonts, amsmath, amsfonts, graphicx, caption, subfig, makecell, lastpage, algorithm, algpseudocode}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+
+\setcounter{totalnumber}{2}
+\setcounter{topnumber}{1}
+
+\DeclareUnicodeCharacter{2212}{-}
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+
+\begin{document}
+\title{Title goes here}
+
+
+\author{\name Ola Nordmann \email ola@ntnu.no\\ \addr Norwegian University of Science and Technology,\\ Department of Computer Science,\\ NO-7491 Trondheim, Norway}
+
+
+\maketitle
+
+
+\begin{abstract}
+  An abstract should be short but include: What is your paper about? Why is it important? How did you do it? What did you find? Why are your findings important?
+
+  You can add a link to the corresponding software repository, if any, by using a footnote. For example: The results\footnote{The source code to reproduce the results can be found at https://gitlab.com/ola/project} show...
+\end{abstract}
+
+\section{Introduction}
+
+Citation examples:
+
+In \citet{krizhevsky2012imagenet}, a deep convolutional neural network was used to achieve state-of-the-art results in the ImageNet Large Scale Visual Recognition Challenge 2010.
+
+Machine learning models trained through backpropagation have become widely popular in the last decade
+since AlexNet \citep{krizhevsky2012imagenet}.
+
+\section{Related Work}
+
+Related previous work performed by other researchers should be presented here.
+
+\section{Methods}
+
+The reader, which has a background in machine learning, should be able to reproduce your results based on this section.
+
+\section{Results and Discussion}
+
+\section{Conclusion and Future Work}
+
+\bibliography{article}
+\bibliographystyle{tmlr}
+\end{document}
