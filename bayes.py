@@ -44,10 +44,10 @@ def stopword_preprocessor(word: str) -> str:
     return clean_word
 
 
-WINDOW_SIZE = 50
-HAM_THRESHOLD = 0.5
+DEFAULT_WINDOW_SIZE = 50
+DEFAULT_HAM_THRESHOLD = 0.5
 DEFAULT_WORD_CHUNKING = 2
-ALPHA = 1
+DEFAULT_ALPHA = 1
 DEFAULT_PREPROCESSORS = [substitution_preprocessor]
 
 
@@ -67,7 +67,11 @@ class Word(AdTaggedWord):
 
 @dataclass
 class NaiveBayesClassifier:
-    training_data: list[AdTaggedWord] = field(default_factory=list)
+    word_chunking: int = DEFAULT_WORD_CHUNKING
+    preprocessors: list[Callable[[str], str]] = field(
+        default_factory=lambda: DEFAULT_PREPROCESSORS
+    )
+
     spam_word_counts: defaultdict[float] = field(
         default_factory=lambda: defaultdict(float)
     )
@@ -116,15 +120,22 @@ class NaiveBayesClassifier:
 
         return preprocessed_text
 
-    def train(self) -> None:
+    def train(self, training_data: list[AdTaggedWord]) -> None:
         """
         Trains the Naive Bayes classifier. This method counts the number of words in spam and ham emails
         and calculates the prior probabilities for spam and ham.
+        :param training_data: The data to train the model on.
         """
+        # Reset model
+        self.spam_word_counts = defaultdict(float)
+        self.ham_word_counts = defaultdict(float)
+        self.setotal_spam = 0
+        self.total_ham = 0
+        self.prior_spam = 0
+        self.prior_ham = 0
 
-        clean_data = self.preprocess_words(self.training_data)
+        clean_data = self.preprocess_words(training_data)
 
-        # Count the number of occurrences of each word in spam and ham emails
         print("Training...")
         for word in tqdm(clean_data):
             if word.ad:
@@ -138,7 +149,7 @@ class NaiveBayesClassifier:
         self.prior_spam = self.total_spam / (self.total_spam + self.total_ham)
         self.prior_ham = self.total_ham / (self.total_spam + self.total_ham)
 
-        # Normalize the word counts, to prevent bias towards longer texts
+        # Normalize the word counts, to get the probability given spam/ham
         self.spam_word_counts = defaultdict(
             lambda: 0,
             {k: v * (1 / self.prior_spam) for k, v in self.spam_word_counts.items()},
@@ -148,7 +159,7 @@ class NaiveBayesClassifier:
             {k: v * (1 / self.prior_ham) for k, v in self.ham_word_counts.items()},
         )
 
-    def classify_window(self, words: list[Word], alpha: float = ALPHA) -> float:
+    def classify_window(self, words: list[Word], alpha: float = DEFAULT_ALPHA) -> float:
         """
         Classifies a list of words as spam or ham.
 
@@ -176,7 +187,7 @@ class NaiveBayesClassifier:
         return spam_probability
 
     def classify_text(
-        self, testing_data: list[AdTaggedWord], window_size=WINDOW_SIZE
+        self, testing_data: list[AdTaggedWord], window_size=DEFAULT_WINDOW_SIZE
     ) -> list[Word]:
         """
         Tests a list of texts and classifies them as spam or ham using a sliding window.
@@ -205,7 +216,7 @@ class NaiveBayesClassifier:
         return clean_data
 
     @staticmethod
-    def evaluate_classification(words: list[Word], ham_threshold=HAM_THRESHOLD):
+    def evaluate_classification(words: list[Word], ham_threshold=DEFAULT_HAM_THRESHOLD):
         timestamps = []
         spam_score = []
         real_spam_score = []
