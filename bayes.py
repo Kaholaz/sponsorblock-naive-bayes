@@ -6,11 +6,10 @@ from collections import defaultdict
 from typing import Optional, Callable
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
-from nltk.tokenize import word_tokenize
 from pandas import DataFrame
 from wordcloud import WordCloud
 from matplotlib import pyplot as plt
-from tqdm import tqdm
+from tqdm import tqdm, trange
 
 tqdm.pandas()
 
@@ -36,10 +35,10 @@ def stopword_preprocessor(word: str) -> str:
     :param word: A single word
     :return: Returns "" if the word is filtered out, else return the word.
     """
-    tokens = word_tokenize(word)
+    tokens = word.spli(" ")
     stopword_list = stopwords.words("english")
-    tokens = [token for token in tokens if token not in stopword_list]
-    tokens = [WordNetLemmatizer().lemmatize(token) for token in tokens]
+    tokens = (token for token in tokens if token not in stopword_list)
+    tokens = (WordNetLemmatizer().lemmatize(token) for token in tokens)
     clean_word = " ".join(tokens)
 
     return clean_word
@@ -47,9 +46,9 @@ def stopword_preprocessor(word: str) -> str:
 
 DEFAULT_WINDOW_SIZE = 50
 DEFAULT_HAM_THRESHOLD = 0.5
-DEFAULT_WORD_CHUNKING = 1
+DEFAULT_WORD_CHUNKING = 2
 DEFAULT_ALPHA = 1
-DEFAULT_PREPROCESSORS = [substitution_preprocessor, stopword_preprocessor]
+DEFAULT_PREPROCESSORS = [substitution_preprocessor]
 
 
 @dataclass
@@ -85,12 +84,27 @@ class NaiveBayesClassifier:
         if preprocessors is None:
             preprocessors = DEFAULT_PREPROCESSORS
 
+        print("Chunking words...")
+        if chunk_words > 1:
+            text["chunked_word"] = text["word"]
+            text["shifted_word"] = text["word"]
+            for _ in range(1, chunk_words):
+                text["shifted_word"] = text["shifted_word"].shift(-1)
+                text["chunked_word"] = text["chunked_word"] + " " + text["shifted_word"]
+
+            text["word"] = text["chunked_word"]
+            text.drop(columns=["chunked_word", "shifted_word"], inplace=True)
+            text = text.iloc[:-chunk_words + 1]
+
         print("Preprocessing text...")
         clean_text = text
         for preprocessor in preprocessors:
             clean_text["word"] = clean_text["word"].progress_apply(preprocessor)
 
-        return clean_text[clean_text["word"] != ""]
+
+        clean_text = clean_text.loc[clean_text["word"] != ""]
+        clean_text.reset_index(drop=True, inplace=True)
+        return clean_text
 
     def train(self, training_data: DataFrame) -> None:
         """
@@ -177,19 +191,20 @@ class NaiveBayesClassifier:
         clean_data.insert(3, "total_spam", [0.0] * len(clean_data))
         clean_data.insert(4, "runs", [0] * len(clean_data))
 
-        # Make sure the window size is not larger than the data
-        clean_data_len = len(clean_data.index)
-        if  clean_data_len < window_size:
-            window_size = clean_data_len
 
         words = list(clean_data["word"])
+        if len(words) < window_size:
+            window_size = len(words)
         # Use a sliding window to classify_window the words
-        for index in range(clean_data_len - window_size + 1):
+        for index in trange(len(clean_data.index) - window_size + 1):
             spam = self.classify_window(words[index : index + window_size])
 
             # Insert the spam probability for each word in the window
-            clean_data.loc[index : index + window_size, "total_spam"] += spam
-            clean_data.loc[index : index + window_size, "runs"] += 1
+            clean_data.loc[index : index + window_size - 1, "total_spam"] += spam
+            clean_data.loc[index : index + window_size - 1, "runs"] += 1
+
+        print(len(clean_data))
+        print(clean_data.head)
 
         return clean_data
 
