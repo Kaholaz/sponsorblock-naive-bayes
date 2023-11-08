@@ -1,6 +1,6 @@
 from bayes import NaiveBayesClassifier, visualize_words, visualize_data_summary
 from files import TranscriptionFileHandler, FileType
-from transcribe import get_video_id, transcribe_ads
+from transcribers.transcribe import get_video_id, transcribe_ads
 import nltk
 
 

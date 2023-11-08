@@ -1,7 +1,7 @@
 import pandas as pd
 from enum import Enum
 import os
-from transcribe import transcribe_video, get_video_id
+from transcribers.transcribe import transcribe_video, get_video_id
 from dataclasses import dataclass
 
 
