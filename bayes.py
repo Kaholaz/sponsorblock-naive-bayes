@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 
 WINDOW_SIZE = 50
-HAM_THRESHOLD = 0.8
+HAM_THRESHOLD = 0.5
 ALPHA = 1
 
 
@@ -198,12 +198,14 @@ class NaiveBayesClassifier:
     def evaluate_classification(words: list[Word], ham_threshold=HAM_THRESHOLD):
         timestamps = []
         spam_score = []
+        real_spam_score = []
         failed_predictions = 0
 
         print(f"Spam words ({ham_threshold} threshold):")
         for index, word in enumerate(words):
             timestamps.append(word.start)
             spam_score.append(word.average_spam)
+            real_spam_score.append(float(word.ad))
 
             false_negative = words[index].ad and word.average_spam < ham_threshold
             false_positive = not words[index].ad and word.average_spam > ham_threshold
@@ -217,7 +219,7 @@ class NaiveBayesClassifier:
                     f"Spam: {str(timestamp).ljust(max_width)}Word: {word.word.ljust(max_width)}Ad: {str(word.ad).ljust(max_width)}Average spam: {word.average_spam}"
                 )
         print("\nAccuracy:", 1 - (failed_predictions / len(words)))
-        plot_spam_score(timestamps, spam_score)
+        plot_spam_score(timestamps, spam_score, real_spam_score)
 
 
 def visualize_words(model: NaiveBayesClassifier) -> None:
@@ -265,9 +267,10 @@ def visualize_data_summary(model: NaiveBayesClassifier) -> None:
     plt.show()
 
 
-def plot_spam_score(timestamps: list[int], spam_score: list[float]) -> None:
+def plot_spam_score(timestamps: list[int], spam_score: list[float], real_spam_score: list[float]) -> None:
     plt.figure(figsize=(10, 6))
-    plt.plot(timestamps, spam_score, label="Spam")
+    plt.plot(timestamps, spam_score, label="Spam prediction")
+    plt.plot(timestamps, real_spam_score, label="Real spam")
 
     plt.title("Spam Score")
     plt.xlabel("Time")
