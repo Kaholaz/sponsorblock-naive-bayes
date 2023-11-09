@@ -35,7 +35,7 @@ def stopword_preprocessor(word: str) -> str:
     :param word: A single word
     :return: Returns "" if the word is filtered out, else return the word.
     """
-    tokens = word.spli(" ")
+    tokens = word.split(" ")
     stopword_list = stopwords.words("english")
     tokens = (token for token in tokens if token not in stopword_list)
     tokens = (WordNetLemmatizer().lemmatize(token) for token in tokens)
@@ -103,7 +103,9 @@ class NaiveBayesClassifier:
 
         clean_text = clean_text.loc[clean_text["word"] != ""]
         clean_text.reset_index(drop=True, inplace=True)
+
         return clean_text
+
 
     def train(self, training_data: DataFrame) -> None:
         """
@@ -119,12 +121,11 @@ class NaiveBayesClassifier:
         self.prior_spam = 0
         self.prior_ham = 0
 
-        clean_text = self.preprocess_words(training_data)
 
-        spam_words = list(clean_text[clean_text["ad"] == True]["word"])
+        spam_words = list(training_data[training_data["ad"] == True]["word"])
         self.total_spam = len(spam_words)
 
-        ham_words = list(clean_text[clean_text["ad"] == False]["word"])
+        ham_words = list(training_data[training_data["ad"] == False]["word"])
         self.total_ham = len(ham_words)
 
         for word in tqdm(spam_words, desc="Counting spam words..."):
@@ -185,23 +186,22 @@ class NaiveBayesClassifier:
         :return: Returns a list of classified words.
         """
 
-        clean_data = self.preprocess_words(testing_data)
 
-        clean_data.insert(3, "total_spam", [0.0] * len(clean_data))
-        clean_data.insert(4, "runs", [0] * len(clean_data))
+        testing_data.insert(3, "total_spam", [0.0] * len(testing_data))
+        testing_data.insert(4, "runs", [0] * len(testing_data))
 
-        words = list(clean_data["word"])
+        words = list(testing_data["word"])
         if len(words) < window_size:
             window_size = len(words)
         # Use a sliding window to classify_window the words
-        for index in trange(len(clean_data.index) - window_size + 1):
+        for index in trange(len(testing_data.index) - window_size + 1):
             spam = self.classify_window(words[index : index + window_size])
 
             # Insert the spam probability for each word in the window
-            clean_data.loc[index : index + window_size - 1, "total_spam"] += spam
-            clean_data.loc[index : index + window_size - 1, "runs"] += 1
+            testing_data.loc[index : index + window_size - 1, "total_spam"] += spam
+            testing_data.loc[index : index + window_size - 1, "runs"] += 1
 
-        return clean_data
+        return testing_data
 
     @staticmethod
     def evaluate_classification(words: DataFrame, ham_threshold=DEFAULT_HAM_THRESHOLD):
@@ -242,14 +242,10 @@ class NaiveBayesClassifier:
         print("\nAccuracy:         ", 1 - (failed_predictions / len(words)))
         print("False positives (%):", false_positives / failed_predictions)
         print("False negatives (%):", false_negatives / failed_predictions)
-        print("Total words:       ", len(words)
+        print("Total words:       ", len(words))
         print("Total ads:         ", len(words[words["ad"] == True]))
         print("\nParameters:")
-        print("Window size:       ", window_size)
         print("Ham threshold:     ", ham_threshold)
-        print("Word chunking:     ", word_chunking)
-        print("Alpha:             ", alpha)
-        print("Preprocessors:     ", preprocessors)
 
         plot_spam_score(timestamps, spam_score, real_spam_score)
 
@@ -277,6 +273,45 @@ def visualize_words(model: NaiveBayesClassifier) -> None:
     ax2.imshow(ham_wordcloud, interpolation="bilinear")
     ax2.set_title("Ham Word Cloud")
     ax2.axis("off")
+
+    # Show the plot
+    plt.tight_layout()
+    plt.show()
+
+def visualize_top_words(model: NaiveBayesClassifier, top_n: int = 10) -> None:
+
+    # Get the top n spam words
+    top_spam_words = sorted(
+        model.spam_word_counts.items(), key=lambda x: x[1], reverse=True
+    )[:top_n]
+
+    # Get the top n ham words
+    top_ham_words = sorted(
+        model.ham_word_counts.items(), key=lambda x: x[1], reverse=True
+    )[:top_n]
+
+    # Create subplots
+    _, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+    # Display the top spam words
+    ax1.bar(
+        [word[0] for word in top_spam_words],
+        [word[1] for word in top_spam_words],
+        color="red",
+    )
+    ax1.set_title("Top Spam Words")
+    ax1.set_xticklabels([word[0] for word in top_spam_words], rotation=45)
+    ax1.set_ylabel("Count")
+
+    # Display the top ham words
+    ax2.bar(
+        [word[0] for word in top_ham_words],
+        [word[1] for word in top_ham_words],
+        color="green",
+    )
+    ax2.set_title("Top Ham Words")
+    ax2.set_xticklabels([word[0] for word in top_ham_words], rotation=45)
+    ax2.set_ylabel("Count")
 
     # Show the plot
     plt.tight_layout()

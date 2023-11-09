@@ -31,39 +31,32 @@ def main():
         "https://www.youtube.com/watch?v=8rofPMY54Ko&t=207s",
     ]
 
+    model = NaiveBayesClassifier()
     files = TranscriptionFileHandler()
 
     if not files.check_resouce_exists():
         files.transcribe_and_save_videos(training_videos, FileType.TRAINING)
         files.transcribe_and_save_videos(testing_videos, FileType.TESTING)
+    
+    if not files.check_resouce_exists(FileType.PREPROCESSED):
+        training_data = files.load_data(FileType.TRAINING)
 
-    training_data = files.load_data(FileType.TRAINING)
-    testing_data = files.load_data(FileType.TESTING)
+        clean_training_data = model.preprocess_words(pd.concat(training_data))
 
-    model = NaiveBayesClassifier()
+        files.dump_preprocessed_words(clean_training_data)
+    else:
+        clean_training_data = pd.concat(files.load_data(FileType.PREPROCESSED))
 
-    model.train(training_data=pd.concat(training_data))
+    model.train(training_data=clean_training_data)
 
     visualize_words(model)
     visualize_data_summary(model)
 
+    testing_data = files.load_data(FileType.TESTING)
     for frame in testing_data:
-        classification = model.classify_text(testing_data=pd.concat(testing_data))
+        clean_data = model.preprocess_words(frame)
+        classification = model.classify_text(testing_data=clean_data)
         model.evaluate_classification(classification)
-
-def transcribe_ads_data():
-    videos = [
-        "https://www.youtube.com/watch?v=mXBzBFxe00o",
-    ]
-    for index, video in enumerate(videos):
-        video_id = get_video_id(video)
-        transcription = transcribe_ads(video_id)
-        if not transcription.empty:
-            with open(f"transcriptions/{video_id}_ads.csv", "w") as f:
-                transcription.to_csv(f, index=False)
-        else:
-            print(f"No ads to transcribe for video {video_id}")
-
 
 if __name__ == "__main__":
     main()
