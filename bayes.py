@@ -209,6 +209,8 @@ class NaiveBayesClassifier:
         spam_score = []
         real_spam_score = []
         failed_predictions = 0
+        false_negatives = 0
+        false_positives = 0
 
         print(f"Spam words ({ham_threshold} threshold):")
         for index, word in words.iterrows():
@@ -218,9 +220,16 @@ class NaiveBayesClassifier:
             real_spam_score.append(float(word.ad))
 
             is_ad = word["ad"]
+            
             false_negative = is_ad and average_spam < ham_threshold
             false_positive = not is_ad and average_spam > ham_threshold
-            if false_negative or false_positive:
+
+            if false_negative:
+                false_negatives += 1
+                failed_predictions += 1
+            
+            if false_positive:
+                false_positives += 1
                 failed_predictions += 1
 
             if average_spam > ham_threshold:
@@ -230,7 +239,18 @@ class NaiveBayesClassifier:
                 print(
                     f"Spam: {str(timestamp).ljust(max_width)}Word: {value.ljust(max_width)}Ad: {str(is_ad).ljust(max_width)}Average spam: {average_spam}"
                 )
-        print("\nAccuracy:", 1 - (failed_predictions / len(words)))
+        print("\nAccuracy:         ", 1 - (failed_predictions / len(words)))
+        print("False positives (%):", false_positives / failed_predictions)
+        print("False negatives (%):", false_negatives / failed_predictions)
+        print("Total words:       ", len(words)
+        print("Total ads:         ", len(words[words["ad"] == True]))
+        print("\nParameters:")
+        print("Window size:       ", window_size)
+        print("Ham threshold:     ", ham_threshold)
+        print("Word chunking:     ", word_chunking)
+        print("Alpha:             ", alpha)
+        print("Preprocessors:     ", preprocessors)
+
         plot_spam_score(timestamps, spam_score, real_spam_score)
 
 
