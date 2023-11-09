@@ -27,8 +27,8 @@ class TranscriptionFileHandler:
             with open(f"{self.path}{file_type.value}/{file}", encoding="UTF-8") as f:
                 data = pd.read_csv(f)
             frames.append(data)
-
-        return pd.concat(frames)
+        
+        return frames
 
     def transcribe_and_save_videos(self, videos: [str], file_type: FileType) -> None:
         if not os.path.exists(self.path + file_type.value):

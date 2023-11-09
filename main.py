@@ -1,6 +1,7 @@
 from bayes import NaiveBayesClassifier, visualize_words, visualize_data_summary
 from files import TranscriptionFileHandler, FileType
 from transcribers.transcribe import get_video_id, transcribe_ads
+import pandas as pd
 import nltk
 
 
@@ -41,13 +42,14 @@ def main():
 
     model = NaiveBayesClassifier()
 
-    model.train(training_data=training_data)
-    #visualize_words(model)
-    #visualize_data_summary(model)
+    model.train(training_data=pd.concat(training_data))
 
-    classification = model.classify_text(testing_data=testing_data)
-    model.evaluate_classification(classification)
+    visualize_words(model)
+    visualize_data_summary(model)
 
+    for frame in testing_data:
+        classification = model.classify_text(testing_data=pd.concat(testing_data))
+        model.evaluate_classification(classification)
 
 def transcribe_ads_data():
     videos = [
