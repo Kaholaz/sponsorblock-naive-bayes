@@ -25,8 +25,8 @@ def stopword_preprocessor(data: DataFrame) -> DataFrame:
     :return: Returns "" if the word is filtered out, else return the word.
     """
     stopword_list = stopwords.words("english")
-    data = data.apply(lambda x: ' '.join([WordNetLemmatizer().lemmatize(word) for word in x.lower().split() if word not in (stopword_list)]))
     data = data.apply(lambda x: re.sub(r"[^a-zA-Z0-9\s]*", "", x))
+    data = data.apply(lambda x: ' '.join([WordNetLemmatizer().lemmatize(word) for word in x.lower().split() if word not in (stopword_list)]))
     return data
 
 
