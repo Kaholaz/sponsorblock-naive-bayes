@@ -1,4 +1,5 @@
-import sys
+import os
 #This file defines the root directory of the project.
 #Do not move this file.
-ROOT_DIR = sys.path[1]
+ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
+
