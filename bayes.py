@@ -46,7 +46,7 @@ def stopword_preprocessor(word: str) -> str:
 
 DEFAULT_WINDOW_SIZE = 50
 DEFAULT_HAM_THRESHOLD = 0.5
-DEFAULT_WORD_CHUNKING = 2
+DEFAULT_WORD_CHUNKING = 1
 DEFAULT_ALPHA = 1
 DEFAULT_PREPROCESSORS = [substitution_preprocessor]
 
@@ -94,13 +94,12 @@ class NaiveBayesClassifier:
 
             text["word"] = text["chunked_word"]
             text.drop(columns=["chunked_word", "shifted_word"], inplace=True)
-            text = text.iloc[:-chunk_words + 1]
+            text = text.iloc[: -chunk_words + 1]
 
         print("Preprocessing text...")
         clean_text = text
         for preprocessor in preprocessors:
             clean_text["word"] = clean_text["word"].progress_apply(preprocessor)
-
 
         clean_text = clean_text.loc[clean_text["word"] != ""]
         clean_text.reset_index(drop=True, inplace=True)
@@ -176,7 +175,7 @@ class NaiveBayesClassifier:
         return spam_probability
 
     def classify_text(
-        self, testing_data: DataFrame , window_size=DEFAULT_WINDOW_SIZE
+        self, testing_data: DataFrame, window_size=DEFAULT_WINDOW_SIZE
     ) -> DataFrame:
         """
         Tests a list of texts and classifies them as spam or ham using a sliding window.
@@ -191,7 +190,6 @@ class NaiveBayesClassifier:
         clean_data.insert(3, "total_spam", [0.0] * len(clean_data))
         clean_data.insert(4, "runs", [0] * len(clean_data))
 
-
         words = list(clean_data["word"])
         if len(words) < window_size:
             window_size = len(words)
@@ -202,9 +200,6 @@ class NaiveBayesClassifier:
             # Insert the spam probability for each word in the window
             clean_data.loc[index : index + window_size - 1, "total_spam"] += spam
             clean_data.loc[index : index + window_size - 1, "runs"] += 1
-
-        print(len(clean_data))
-        print(clean_data.head)
 
         return clean_data
 
