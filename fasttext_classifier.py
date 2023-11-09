@@ -1,7 +1,12 @@
+from nltk import word_tokenize, WordNetLemmatizer
+from nltk.corpus import stopwords
+from pandas import DataFrame
+
 from config import ROOT_DIR
 from typing import Tuple
 import pandas as pd
 import fasttext
+import regex as re
 import csv
 import os
 
@@ -10,6 +15,19 @@ if not os.path.exists(modelDir):
     os.makedirs(modelDir)
 
 dataset_dir = ROOT_DIR + "/transcriptions/"
+
+
+def stopword_preprocessor(data: DataFrame) -> DataFrame:
+    """
+    Preprocesses the data, lemmatizes and removes unecessary symbols and stopwords.
+
+    :param word: A single word
+    :return: Returns "" if the word is filtered out, else return the word.
+    """
+    stopword_list = stopwords.words("english")
+    data = data.apply(lambda x: ' '.join([WordNetLemmatizer().lemmatize(word) for word in x.lower().split() if word not in (stopword_list)]))
+    data = data.apply(lambda x: re.sub(r"[^a-zA-Z0-9\s]*", "", x))
+    return data
 
 
 class FastTextClassifier:
@@ -32,6 +50,8 @@ class FastTextClassifier:
             temp = temp[temp["transcript"].str.len() > 0].explode("transcript")
 
             training_data = pd.DataFrame(list(temp["transcript"])).drop(columns=["start", "duration"])
+
+            training_data["text"] = stopword_preprocessor(training_data["text"])
 
             training_data["ad"] = training_data["ad"].apply(lambda x: "__label__" + str(x))
 
@@ -82,15 +102,16 @@ class FastTextClassifier:
         else:
             print("Train or load a model first")
 
-# if __name__ == "__main__":
-#    classifier = FastTextClassifier()
 
-#    classifier.process_dataset()
+if __name__ == "__main__":
+    classifier = FastTextClassifier()
 
-#    classifier.train()
+    #classifier.process_dataset()
 
-#    classifier.save_model()
+    #classifier.train(epochs=25)
 
-#    prediction = classifier.predict("well todays sponsor doesnt think so if you want to learn and earn with coding while simultaneously living a stress free checkout the code boot camp")
+    #classifier.save_model()
 
-#    print(prediction)
+    classifier.load_model()
+
+    classifier.find_ad_timestamps()
