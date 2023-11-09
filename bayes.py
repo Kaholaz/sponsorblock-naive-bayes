@@ -28,27 +28,23 @@ def substitution_preprocessor(word: str) -> str:
     return clean_word
 
 
-def stopword_preprocessor(word: str) -> str:
-    """
-    Remove all words in the stopword list provided by nltk.corpus.stopwords
+_stopword_list = stopwords.words("english")
+_word_lemmatizer = WordNetLemmatizer()
 
-    :param word: A single word
-    :return: Returns "" if the word is filtered out, else return the word.
-    """
-    tokens = word.split(" ")
-    stopword_list = stopwords.words("english")
-    tokens = (token for token in tokens if token not in stopword_list)
-    tokens = (WordNetLemmatizer().lemmatize(token) for token in tokens)
-    clean_word = " ".join(tokens)
 
-    return clean_word
+def stopword_preprocessor(word: str):
+    return " ".join(
+        _word_lemmatizer.lemmatize(word)
+        for w in word.lower().split()
+        if w not in (_stopword_list)
+    )
 
 
 DEFAULT_WINDOW_SIZE = 50
 DEFAULT_HAM_THRESHOLD = 0.5
 DEFAULT_WORD_CHUNKING = 1
 DEFAULT_ALPHA = 1
-DEFAULT_PREPROCESSORS = [substitution_preprocessor]
+DEFAULT_PREPROCESSORS = [substitution_preprocessor, stopword_preprocessor]
 
 
 @dataclass
@@ -106,7 +102,6 @@ class NaiveBayesClassifier:
 
         return clean_text
 
-
     def train(self, training_data: DataFrame) -> None:
         """
         Trains the Naive Bayes classifier. This method counts the number of words in spam and ham emails
@@ -120,7 +115,6 @@ class NaiveBayesClassifier:
         self.total_ham = 0
         self.prior_spam = 0
         self.prior_ham = 0
-
 
         spam_words = list(training_data[training_data["ad"] == True]["word"])
         self.total_spam = len(spam_words)
@@ -186,7 +180,6 @@ class NaiveBayesClassifier:
         :return: Returns a list of classified words.
         """
 
-
         testing_data.insert(3, "total_spam", [0.0] * len(testing_data))
         testing_data.insert(4, "runs", [0] * len(testing_data))
 
@@ -220,14 +213,14 @@ class NaiveBayesClassifier:
             real_spam_score.append(float(word.ad))
 
             is_ad = word["ad"]
-            
+
             false_negative = is_ad and average_spam < ham_threshold
             false_positive = not is_ad and average_spam > ham_threshold
 
             if false_negative:
                 false_negatives += 1
                 failed_predictions += 1
-            
+
             if false_positive:
                 false_positives += 1
                 failed_predictions += 1
@@ -277,6 +270,7 @@ def visualize_words(model: NaiveBayesClassifier) -> None:
     # Show the plot
     plt.tight_layout()
     plt.show()
+
 
 def visualize_top_words(model: NaiveBayesClassifier, top_n: int = 10) -> None:
 
