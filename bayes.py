@@ -40,7 +40,7 @@ def stopword_preprocessor(word: str):
     )
 
 
-DEFAULT_WINDOW_SIZE = 50
+DEFAULT_WINDOW_SIZE = 100
 DEFAULT_HAM_THRESHOLD = 0.5
 DEFAULT_WORD_CHUNKING = 1
 DEFAULT_ALPHA = 1
@@ -170,7 +170,7 @@ class NaiveBayesClassifier:
         return spam_probability
 
     def classify_text(
-        self, testing_data: DataFrame, window_size=DEFAULT_WINDOW_SIZE
+        self, testing_data: DataFrame, window_size=DEFAULT_WINDOW_SIZE, alpha=DEFAULT_ALPHA
     ) -> DataFrame:
         """
         Tests a list of texts and classifies them as spam or ham using a sliding window.
@@ -188,7 +188,7 @@ class NaiveBayesClassifier:
             window_size = len(words)
         # Use a sliding window to classify_window the words
         for index in trange(len(testing_data.index) - window_size + 1):
-            spam = self.classify_window(words[index : index + window_size])
+            spam = self.classify_window(words[index : index + window_size], alpha)
 
             # Insert the spam probability for each word in the window
             testing_data.loc[index : index + window_size - 1, "total_spam"] += spam
