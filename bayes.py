@@ -11,6 +11,7 @@ from wordcloud import WordCloud
 from matplotlib import pyplot as plt
 from tqdm import tqdm, trange
 
+import numpy as np
 tqdm.pandas()
 
 
@@ -241,6 +242,37 @@ class NaiveBayesClassifier:
         print("Ham threshold:     ", ham_threshold)
 
         plot_spam_score(timestamps, spam_score, real_spam_score)
+
+    def visualize_word_importance(self, start_n, stop_n) -> None:
+        """
+        Visualizes the importance of words for spam classification.
+        Displays the top N words with their importance scores.
+        
+        :param top_n: The number of top words to display.
+        """
+
+        all_words = set(self.spam_word_counts.keys()) | set(self.ham_word_counts.keys())
+
+        spam_word_array = np.array([self.spam_word_counts[word] for word in all_words])
+        ham_word_array = np.array([self.ham_word_counts[word] for word in all_words])
+
+        importance_scores = (spam_word_array +1) / (ham_word_array + 1)
+
+        top_indices = np.argsort(importance_scores)[::-1][start_n:stop_n]
+
+        top_words = np.array(list(all_words))[top_indices]
+        top_scores = importance_scores[top_indices]
+
+        plt.figure(figsize=(10, 6))
+        plt.bar(top_words, top_scores, color="blue")
+        plt.title("Top Words Importance for Spam Classification")
+        plt.xlabel("Word")
+        plt.ylabel("Importance Score")
+
+        # Show the plot
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.show()
 
 
 def visualize_words(model: NaiveBayesClassifier) -> None:
