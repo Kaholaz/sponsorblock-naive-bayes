@@ -17,7 +17,7 @@ import os
 chunk_size = 50000
 chunks = []
 
-directory = ROOT_DIR + "/dataset_builder/sponsor_data/"
+directory = ROOT_DIR + "/transcribers/sponsor_data/"
 if not os.path.exists(directory):
     os.makedirs(directory)
 
