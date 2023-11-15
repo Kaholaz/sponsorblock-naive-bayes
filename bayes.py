@@ -207,13 +207,13 @@ class NaiveBayesClassifier:
         false_positives = 0
 
         print(f"Spam words ({ham_threshold} threshold):")
-        for index, word in words.iterrows():
-            timestamps.append(word["start"])
-            average_spam = word["total_spam"] / word["runs"]
+        for row in words.itertuples():
+            timestamps.append(row.start)
+            average_spam = row.total_spam / row.runs
             spam_score.append(average_spam)
-            real_spam_score.append(float(word.ad))
+            real_spam_score.append(float(row.ad))
 
-            is_ad = word["ad"]
+            is_ad = row.ad
 
             false_negative = is_ad and average_spam < ham_threshold
             false_positive = not is_ad and average_spam > ham_threshold
@@ -227,9 +227,9 @@ class NaiveBayesClassifier:
                 failed_predictions += 1
 
             if average_spam > ham_threshold:
-                timestamp = datetime.timedelta(seconds=word["start"])
+                timestamp = datetime.timedelta(seconds=row.start)
                 max_width = 20  # Adjust this value to your desired column width
-                value = word["word"]
+                value = row.word
                 print(
                     f"Spam: {str(timestamp).ljust(max_width)}Word: {value.ljust(max_width)}Ad: {str(is_ad).ljust(max_width)}Average spam: {average_spam}"
                 )
