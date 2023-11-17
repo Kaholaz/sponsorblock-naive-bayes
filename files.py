@@ -6,63 +6,41 @@ from transcribers.transcribe import transcribe_video, get_video_id
 from transcribers.youtube_transcription_fetcher import fetch_transcript
 
 
-class FileType(Enum):
-    TRAINING = "training"
-    TESTING = "testing"
-    PREPROCESSED = "preprocessed"
-    ROOT = ""
 
 
-DEFAULT_TRANSCRIPTION_PATH = "transcriptions/"
+def load_multiple_files(dir: str) -> DataFrame:
+    files = os.listdir(dir)
 
+    frames = []
+    for file_path in files:
+        with open(file_path, encoding="UTF-8") as f:
+            data = pd.read_csv(f)
+        frames.append(data)
 
-class TranscriptionFileHandler:
-    def __init__(self, path=DEFAULT_TRANSCRIPTION_PATH) -> None:
-        self.path = path
+    return frames
 
-    def dump_preprocessed_words(self, text: DataFrame) -> None:
-        if not os.path.exists(self.path + FileType.PREPROCESSED.value):
-            os.makedirs(self.path + FileType.PREPROCESSED.value)
-        with open(f"{self.path}{FileType.PREPROCESSED.value}/dump.csv", "w", encoding="UTF-8") as f:
-            text.to_csv(f)
-
-    def load_data(self, file_type: FileType) -> DataFrame:
-        files = os.listdir(f"{self.path}{file_type.value}")
-
-        frames = []
-        for file in files:
-            with open(f"{self.path}{file_type.value}/{file}", encoding="UTF-8") as f:
-                data = pd.read_csv(f)
-            frames.append(data)
-
-        return frames
-
-    def transcribe_and_save_videos(self, videos: [str], file_type: FileType) -> None:
-        if not os.path.exists(self.path + file_type.value):
-            os.makedirs(self.path + file_type.value)
-
-        for index, video in enumerate(videos):
-            video_id = get_video_id(video)
-            transcription = transcribe_video(video_id)
-            with open(
-                    f"{self.path}{file_type.value}/{index}.csv", "w", encoding="UTF-8"
-            ) as f:
-                transcription.to_csv(f)
-
-    @staticmethod
-    def get_transcription(video: str) -> DataFrame:
+def transcribe_and_save_videos(videos: [str], output_file_name: str) -> None:
+    frames = []
+    for video in videos:
         video_id = get_video_id(video)
-        try:
-            transcription = fetch_transcript(video_id)
-        except Exception as e:
-            print("An error occurred while fetching the transcript: ", e)
-            print("\nDownloading and transcribing the video with WhisperX.\n")
-            transcription = transcribe_video(video_id)
+        transcription = transcribe_video(video_id)
+        frames.append(transcription)
 
-        return transcription
+    with open(output_file_name, "w", encoding="UTF-8"
+    ) as f:
+        transcription = pd.concat(frames)
+        transcription.to_csv(f)
 
-    def check_resouce_exists(self, file_type: FileType = FileType.ROOT) -> bool:
-        return os.path.exists(self.path + file_type.value)
+def get_transcription(video: str) -> DataFrame:
+    video_id = get_video_id(video)
+    try:
+        transcription = fetch_transcript(video_id)
+    except Exception as e:
+        print("An error occurred while fetching the transcript: ", e)
+        print("\nDownloading and transcribing the video with WhisperX.\n")
+        transcription = transcribe_video(video_id)
+
+    return transcription
 
 def transcribe_ads_data():
     videos = [
