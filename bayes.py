@@ -1,11 +1,8 @@
 from dataclasses import dataclass, field
-import re
 import math
 import datetime
 from collections import defaultdict
-from typing import Optional, Callable
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
+from typing import Callable
 from pandas import DataFrame
 from wordcloud import WordCloud
 from matplotlib import pyplot as plt
