@@ -19,10 +19,6 @@ DEFAULT_ALPHA = 1
 @dataclass
 class NaiveBayesClassifier:
     word_chunking: int = DEFAULT_WORD_CHUNKING
-    preprocessors: list[Callable[[str], str]] = field(
-        default_factory=lambda: DEFAULT_PREPROCESSORS
-    )
-
     spam_word_counts: defaultdict[float] = field(
         default_factory=lambda: defaultdict(float)
     )
