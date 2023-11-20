@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 import math
 import datetime
 from collections import defaultdict
-from typing import Callable
 from pandas import DataFrame
 from wordcloud import WordCloud
 from matplotlib import pyplot as plt
@@ -38,6 +37,7 @@ class NaiveBayesClassifier:
         and calculates the prior probabilities for spam and ham.
         :param training_data: The data to train the model on.
         """
+
         # Reset model
         self.spam_word_counts = defaultdict(float)
         self.ham_word_counts = defaultdict(float)
