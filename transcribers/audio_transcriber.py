@@ -107,7 +107,8 @@ def get_ad_segments(video_id: str) -> list[Segment]:
     """
 
     r = requests.get(f"https://sponsor.ajay.app/api/skipSegments?videoID={video_id}")
-    if r.status_code == 404:
+    print(r.status_code, "Status code")
+    if r.status_code != 200:
         # Not in the database -> no ads.
         return []
 
