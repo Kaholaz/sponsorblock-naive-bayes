@@ -6,17 +6,6 @@ from transcribers.transcribe import transcribe_video, get_video_id
 from transcribers.youtube_transcription_fetcher import fetch_transcript
 
 
-def load_multiple_files(dir: str) -> DataFrame:
-    files = os.listdir(dir)
-
-    frames = []
-    for file_path in files:
-        with open(file_path, encoding="UTF-8") as f:
-            data = pd.read_csv(f)
-        frames.append(data)
-
-    return frames
-
 def transcribe_and_save_videos(videos: [str], output_file_name: str) -> None:
     frames = []
     for video in videos:
