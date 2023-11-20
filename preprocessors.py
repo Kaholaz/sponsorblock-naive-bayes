@@ -1,4 +1,5 @@
 import sys
+import re
 from typing import Optional, Callable
 from typing import Optional, Callable
 from pandas import DataFrame
@@ -6,7 +7,6 @@ from tqdm import tqdm
 from typing import Optional, Callable
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
-import pandas as pd
 
 tqdm.pandas()
 
@@ -35,6 +35,9 @@ def stopword_preprocessor(word: str):
         for w in word.lower().split()
         if w not in (_stopword_list)
     )
+
+DEFUALT_PREPROCESSORS = [substitution_preprocessor, stopword_preprocessor]
+DEFAULT_CHUNK_WORDS = 1
 
 def preprocess_words(
     text: DataFrame,  
@@ -69,25 +72,3 @@ def preprocess_words(
     clean_text.reset_index(drop=True, inplace=True)
 
     return clean_text
-
-
-def main(chunk_words: int, preprocessors: Optional[list[Callable[[str], str]]], input_file: str, output_file: str):
-    print("Reading input file...")
-    text = pd.read_csv(input_file, names=["word"], header=None, sep="\n")
-    print("Preprocessing words...")
-    clean_text = preprocess_words(text, chunk_words, preprocessors)
-    print("Writing output file...")
-    clean_text.to_csv(output_file, header=False, index=False)
-
-DEFUALT_PREPROCESSORS = [substitution_preprocessor, stopword_preprocessor]
-DEFAULT_CHUNK_WORDS = 1
-
-if __name__ == "__main__":
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
-
-    chunk_words = sys.argv[3] if len(sys.argv) > 3 else DEFAULT_CHUNK_WORDS
-
-    preprcessors = sys.argv[4] if len(sys.argv) > 4 else DEFUALT_PREPROCESSORS
-
-    main(chunk_words, preprcessors, input_file, output_file)

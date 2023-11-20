@@ -7,7 +7,6 @@ import re
 from typing import Optional
 from dataclasses import dataclass
 from pandas import DataFrame
-from transcribers.transcribe import transcribe_video, get_video_id
 from transcribers.youtube_transcription_fetcher import fetch_transcript
 
 
@@ -193,6 +192,7 @@ def transcribe_and_save_videos(videos: [str], output_file_name: str) -> None:
 
 def get_transcription(video: str) -> DataFrame:
     video_id = get_video_id(video)
+    print(video_id)
     try:
         transcription = fetch_transcript(video_id)
     except Exception as e:
