@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass, field
 import math
 import datetime
@@ -8,12 +9,14 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm, trange
 
 import numpy as np
+
 tqdm.pandas()
 
 DEFAULT_WINDOW_SIZE = 100
 DEFAULT_HAM_THRESHOLD = 0.5
 DEFAULT_WORD_CHUNKING = 1
 DEFAULT_ALPHA = 1
+
 
 @dataclass
 class NaiveBayesClassifier:
@@ -29,7 +32,6 @@ class NaiveBayesClassifier:
     prior_spam: float = 0
     prior_ham: float = 0
     training_data_size: int = 0
-
 
     def train(self, training_data: DataFrame) -> None:
         """
@@ -73,6 +75,50 @@ class NaiveBayesClassifier:
             {k: v * (1 / self.prior_ham) for k, v in self.ham_word_counts.items()},
         )
 
+    def save(self, output_file: str) -> None:
+        with open(output_file, "w", encoding="UTF-8") as file:
+            file.write(f"{self.training_data_size},{self.total_spam},{self.total_ham},{self.prior_spam},{self.prior_ham}\n")
+            for word, count in self.spam_word_counts.items():
+                file.write(f"{word},{count}\n")
+
+            file.write("\n")
+
+            for word, count in self.ham_word_counts.items():
+                file.write(f"{word},{count}\n")
+
+    def load(self, input_file: str):
+        with open(input_file, "r", encoding="UTF-8") as f:
+            lines = f.readlines()
+            
+            data =  lines[0].split(",")
+
+
+            self.training_data_size = int(data[0])
+            self.total_spam = int(data[1])
+            self.total_ham = int(data[2])
+            self.prior_spam = float(data[3])
+            self.prior_ham = float(data[4])
+
+            spam_word_counts = {}
+            ham_word_counts = {}
+
+            current_line = 1
+
+            while lines[current_line] != "\n":
+                word, count = lines[current_line].strip().split(",")
+                spam_word_counts[word] = float(count)
+                current_line += 1
+
+            current_line += 1
+
+            while current_line < len(lines) and lines[current_line] != "\n":
+                word, count = lines[current_line].strip().split(",")
+                ham_word_counts[word] = float(count)
+                current_line += 1
+
+            self.spam_word_counts = (spam_word_counts,)
+            self.ham_word_counts = ham_word_counts
+
     def classify_window(self, words: list[str], alpha: float = DEFAULT_ALPHA) -> float:
         """
         Classifies a list of words as spam or ham.
@@ -89,7 +135,7 @@ class NaiveBayesClassifier:
 
         for word in words:
             log_spam_likelihood += math.log(
-                (self.spam_word_counts[word] + alpha )
+                (self.spam_word_counts[word] + alpha)
                 / (self.ham_word_counts[word] + alpha)
             )
 
@@ -101,7 +147,10 @@ class NaiveBayesClassifier:
         return spam_probability
 
     def classify_text(
-        self, testing_data: DataFrame, window_size=DEFAULT_WINDOW_SIZE, alpha=DEFAULT_ALPHA
+        self,
+        testing_data: DataFrame,
+        window_size=DEFAULT_WINDOW_SIZE,
+        alpha=DEFAULT_ALPHA,
     ) -> DataFrame:
         """
         Tests a list of texts and classifies them as spam or ham using a sliding window.
@@ -159,10 +208,10 @@ class NaiveBayesClassifier:
             if false_positive:
                 false_positives += 1
                 failed_predictions += 1
-            
+
             if true_negative:
                 true_negatives += 1
-            
+
             if true_positive:
                 true_positives += 1
 
@@ -173,7 +222,7 @@ class NaiveBayesClassifier:
                 print(
                     f"Spam: {str(timestamp).ljust(max_width)}Word: {value.ljust(max_width)}Ad: {str(is_ad).ljust(max_width)}Average spam: {average_spam}"
                 )
-            
+
         print("\nAccuracy:         ", 1 - (failed_predictions / len(words)))
         print("False negatives:  ", false_negatives)
         print("False positives:  ", false_positives)
@@ -186,11 +235,12 @@ class NaiveBayesClassifier:
 
         plot_spam_score(timestamps, spam_score, real_spam_score)
 
+
 def visualize_word_importance(model, start_n, stop_n) -> None:
     """
     Visualizes the importance of words for spam classification.
     Displays the top N words with their importance scores.
-    
+
     :param top_n: The number of top words to display.
     """
 
@@ -199,7 +249,7 @@ def visualize_word_importance(model, start_n, stop_n) -> None:
     spam_word_array = np.array([model.spam_word_counts[word] for word in all_words])
     ham_word_array = np.array([model.ham_word_counts[word] for word in all_words])
 
-    importance_scores = (spam_word_array +1) / (ham_word_array + 1)
+    importance_scores = (spam_word_array + 1) / (ham_word_array + 1)
 
     top_indices = np.argsort(importance_scores)[::-1][start_n:stop_n]
 
@@ -220,7 +270,7 @@ def visualize_word_importance(model, start_n, stop_n) -> None:
     spam_word_array = np.array([model.ham_word_counts[word] for word in all_words])
     ham_word_array = np.array([model.spam_word_counts[word] for word in all_words])
 
-    importance_scores = (spam_word_array +1) / (ham_word_array + 1)
+    importance_scores = (spam_word_array + 1) / (ham_word_array + 1)
 
     top_indices = np.argsort(importance_scores)[::-1][start_n:stop_n]
 
@@ -269,7 +319,6 @@ def visualize_words(model: NaiveBayesClassifier) -> None:
 
 
 def visualize_top_words(model: NaiveBayesClassifier, top_n: int = 10) -> None:
-
     # Get the top n spam words
     top_spam_words = sorted(
         model.spam_word_counts.items(), key=lambda x: x[1], reverse=True
@@ -322,6 +371,7 @@ def visualize_data_summary(model: NaiveBayesClassifier) -> None:
     plt.title("Spam vs. Ham Distribution")
 
     plt.show()
+
 
 def visualize_data_summary_of_list(model: NaiveBayesClassifier) -> None:
     # Create a figure for the pie chart
