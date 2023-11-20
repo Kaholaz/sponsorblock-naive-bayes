@@ -44,3 +44,8 @@ python predict.py --video <video_url | video_id> --model <model_path>
 
 The model path is the path to the model outputted by the training script.
 
+
+## Further work
+
+- Look into wordembedding
+- Web extension
