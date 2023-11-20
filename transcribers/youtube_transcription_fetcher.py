@@ -219,8 +219,7 @@ def fetch_transcript(video_id: str) -> DataFrame:
             processed_transcript["ad"].append(is_ad)
 
     df_transcript = pd.DataFrame(processed_transcript)
-    df_transcript.to_csv("test.csv", index=False)
-    return pd.DataFrame(processed_transcript)
+    return df_transcript
 
 
 
