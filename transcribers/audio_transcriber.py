@@ -49,24 +49,25 @@ def transcribe_video(video_id: str) -> pd.DataFrame:
     df = transcribe_segment("tmp.mp3", False)
 
     segments = get_ad_segments(video_id)
-    segment_i = 0
-    segment = segments[segment_i]
+    if segments:
+        segment_i = 0
+        segment = segments[segment_i]
 
-    for df_i, row in df.iterrows():
-        # Before an ad
-        if row["start"] < segment.start:
-            continue
+        for df_i, row in df.iterrows():
+            # Before an ad
+            if row["start"] < segment.start:
+                continue
 
-        # After an ad
-        if row["start"] > segment.end:
-            segment_i += 1
-            if segment_i >= len(segments):
-                break  # No more ads
-            segment = segments[segment_i]
-            continue
+            # After an ad
+            if row["start"] > segment.end:
+                segment_i += 1
+                if segment_i >= len(segments):
+                    break  # No more ads
+                segment = segments[segment_i]
+                continue
 
-        # During an ad
-        df.at[df_i, "ad"] = True
+            # During an ad
+            df.at[df_i, "ad"] = True
 
     return df
 
@@ -106,8 +107,7 @@ def get_ad_segments(video_id: str) -> list[Segment]:
     :return: Returns a list of segemnts in the video that contains an ad.
     """
 
-    r = requests.get(f"https://sponsor.ajay.app/api/skipSegments?videoID={video_id}")
-    print(r.status_code, "Status code")
+    r = requests.get(f"https://sponsor.ajay.app/api/skipSegments?videoID={video_id}&category=sponsor")
     if r.status_code != 200:
         # Not in the database -> no ads.
         return []
