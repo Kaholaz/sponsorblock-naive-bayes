@@ -1,6 +1,13 @@
-# SponsorBlock-naive-bayes
+# Ad-Segment-Classification-Naive-Bayes
 
-Automatically detect sponsor segments in YouTube videos using a Naive Bayes classifier. The training process utilizes the [SponsorBlock API](https://sponsor.ajay.app/). Naive bayes is a simple classifier able to run on low-end hardware. The model is supposed to run on your local machine, with no cost.
+The intent of this project was to explore the possibility of extending the option of text based ad segment detection over to (compared to deep learning models) lower-end hardware.
+The model that is explored in this project is therefore a Naive Bayes based statistical classifier, which is repurposed and used for detecting dynamic length ads/sponsor-segments in the audio medium.
+
+This model can be trained on a labeled text corpus that follow (word,start,ad) csv format.
+The model has shown promising results when classifying sponsor segments in YouTube videos. If this project is to be used on other content types one may or may not find success using this model, assuming one manages to accumulate a sufficiently large text corpus to train on.
+We've been unable to test training the model on other content-types than YouTube videos due to time constraints, even using Speech To Text modules like WhisperX would still take 3+ minutes for a single video, making this extremely time consuming when transcribing thousands of files. This project has therefore relied mainly on YouTube's caption API for gathering transcriptions.
+The process of accumulating the training dataset consists of a combination of the [SponsorBlock API](https://sponsor.ajay.app/) and the [youtube_transcript_api](https://pypi.org/project/youtube-transcript-api/) python module to create a labelled text corpus.
+
 
 ## Pre-requisites
 
