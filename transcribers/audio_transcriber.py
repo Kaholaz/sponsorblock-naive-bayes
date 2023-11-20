@@ -152,17 +152,19 @@ def download_segment(
 
 
 def transcribe_segment(
-    segment_filename: str, default_ad_value: bool = False
+    segment_filename: str, default_ad_value: bool = False, delete_file: bool = True
 ) -> pd.DataFrame:
     """
     Transcribes an audio file.
 
+    :param delete_file: Whether to delete the audio file after transcribing it.
     :param segment_filename: The filename of the segment to transcribe.
-    :param defaul_ad_value: The value the 'ad' colum of the DataFrame defaults to.
+    :param default_ad_value: The value the 'ad' colum of the DataFrame defaults to.
     :return: Returns a DataFrame with the columns 'word', 'start', and 'ad'.
     """
     audio = whisper.load_audio(segment_filename)
-    os.remove(segment_filename)
+    if delete_file:
+        os.remove(segment_filename)
     model = whisper.load_model("tiny", device="cpu")
     result = whisper.transcribe(model, audio, language="en")
 
