@@ -1,6 +1,6 @@
 import pandas as pd
 from bayes import NaiveBayesClassifier
-from transcribers.transcribe import get_transcription, get_video_id, transcribe_video
+from transcribers.audio_transcriber import get_transcription, get_video_id, transcribe_video
 from preprocessors import DEFUALT_PREPROCESSORS, DEFAULT_CHUNK_WORDS
 import argparse
 
