@@ -6,8 +6,6 @@ from transcribers.transcribe import transcribe_video, get_video_id
 from transcribers.youtube_transcription_fetcher import fetch_transcript
 
 
-
-
 def load_multiple_files(dir: str) -> DataFrame:
     files = os.listdir(dir)
 
