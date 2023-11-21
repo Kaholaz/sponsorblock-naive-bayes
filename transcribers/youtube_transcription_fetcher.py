@@ -22,7 +22,7 @@ processedSponsorTimesDir = ROOT_DIR + "/transcribers/sponsor_data/"
 processedSponsorTimesPath = processedSponsorTimesDir + "processed_sponsorTimes.csv"
 os.makedirs(processedSponsorTimesDir, exist_ok=True)
 
-transcriptionDir = ROOT_DIR + "/transcriptions/"
+transcriptionDir = ROOT_DIR 
 
 manualTranscriptionPath = transcriptionDir + "youtube_manual_transcriptions.ndjson"
 autoTranscriptionPath = transcriptionDir + "youtube_auto_transcriptions.ndjson"
