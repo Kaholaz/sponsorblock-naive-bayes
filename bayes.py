@@ -194,7 +194,8 @@ class NaiveBayesClassifier:
             timestamps.append(row.start)
             average_spam = row.total_spam / row.runs
             spam_score.append(average_spam)
-            real_spam_score.append(float(row.ad))
+            ad = row.ad if row.ad else False
+            real_spam_score.append(float(ad))
 
             is_ad = row.ad
 
