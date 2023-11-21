@@ -9,12 +9,12 @@ if __name__ == "__main__":
                                                  "to a path.")
 
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--video", type=str, help="For transcribing YouTube video. Can either be a YouTube video ID or "
+    group.add_argument("-v", "--video", type=str, help="For transcribing YouTube video. Can either be a YouTube video ID or "
                                                  "a URL.")
-    group.add_argument("--audio_path", type=str, help="For transcribing a local audio file. Has to be absolute path "
+    group.add_argument("-a", "--audio-path", type=str, help="For transcribing a local audio file. Has to be absolute path "
                                                       "of the audio file.")
 
-    parser.add_argument("--save_path", type=str, help="Optional full file path to save to, including filetype. If "
+    parser.add_argument("-s", "--save-path", type=str, help="Optional full file path to save to, including filetype. If "
                                                       "ommitted, defaults the save path to /transcriptions folder in "
                                                       "project root.", required=False, default=SAVE_PATH)
 
@@ -25,6 +25,6 @@ if __name__ == "__main__":
     elif args.audio_path:
         df = transcriber.transcribe_segment(args.audio_path, delete_file=False)
     else:
-        raise Exception("Missing args. Must provide something to transcribe, either --video or --audio_path")
+        raise Exception("Missing args. Must provide something to transcribe, either --video or --audio-path")
 
     df.to_csv(args.save_path, index=False)
