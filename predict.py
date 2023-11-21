@@ -1,7 +1,7 @@
 import pandas as pd
-from bayes import NaiveBayesClassifier
+from bayes import NaiveBayesClassifier, visualize_words
 from transcribers.audio_transcriber import get_transcription, get_video_id, transcribe_video
-from preprocessors import DEFUALT_PREPROCESSORS, DEFAULT_CHUNK_WORDS
+from preprocessors import DEFUALT_PREPROCESSORS, DEFAULT_CHUNK_WORDS, preprocess_words
 import argparse
 
 from transcribers.youtube_transcription_fetcher import fetch_transcript
@@ -14,8 +14,10 @@ def main(video: str, model_data: str, chunk_words: int, preprocessors: list[str]
 
     data = fetch_transcript(video_id)
 
-    classification = model.classify_text(data)
-    
+    clean_data = preprocess_words(data, chunk_words, preprocessors)
+
+    classification = model.classify_text(clean_data)
+
     model.evaluate_classification(classification)
 
 if __name__ == "__main__":
