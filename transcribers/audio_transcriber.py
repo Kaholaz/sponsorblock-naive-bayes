@@ -107,7 +107,9 @@ def get_ad_segments(video_id: str) -> list[Segment]:
     :return: Returns a list of segemnts in the video that contains an ad.
     """
 
-    r = requests.get(f"https://sponsor.ajay.app/api/skipSegments?videoID={video_id}&category=sponsor")
+    r = requests.get(
+        f"https://sponsor.ajay.app/api/skipSegments?videoID={video_id}&category=sponsor"
+    )
     if r.status_code != 200:
         # Not in the database -> no ads.
         return []
@@ -180,7 +182,6 @@ def transcribe_segment(
     return pd.DataFrame({"word": words, "start": starts, "ad": ads})
 
 
-
 def transcribe_and_save_videos(videos: [str], output_file_name: str) -> None:
     frames = []
     for video in videos:
@@ -188,10 +189,10 @@ def transcribe_and_save_videos(videos: [str], output_file_name: str) -> None:
         transcription = transcribe_video(video_id)
         frames.append(transcription)
 
-    with open(output_file_name, "w", encoding="UTF-8"
-    ) as f:
+    with open(output_file_name, "w", encoding="UTF-8") as f:
         transcription = pd.concat(frames)
         transcription.to_csv(f)
+
 
 def get_transcription(video: str) -> DataFrame:
     video_id = get_video_id(video)
@@ -204,6 +205,7 @@ def get_transcription(video: str) -> DataFrame:
         transcription = transcribe_video(video_id)
 
     return transcription
+
 
 def transcribe_ads_data():
     videos = [

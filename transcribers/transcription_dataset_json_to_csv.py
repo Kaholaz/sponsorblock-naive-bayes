@@ -31,18 +31,26 @@ def get_timestamps() -> None:
     with open("sponsor_data/sponsor_timestamps.ndjson", "w") as file:
         for _, row in transcripts.iterrows():
             video_id = row["video_id"]
-            r = requests.get(f"https://sponsor.ajay.app/api/skipSegments?videoID={video_id}&category=sponsor")
+            r = requests.get(
+                f"https://sponsor.ajay.app/api/skipSegments?videoID={video_id}&category=sponsor"
+            )
             if r.status_code != 404:
                 sponsor_segments = r.json()
-                sponsor_timestamps = [(segment["segment"][0], segment["segment"][1]) for segment in sponsor_segments]
+                sponsor_timestamps = [
+                    (segment["segment"][0], segment["segment"][1])
+                    for segment in sponsor_segments
+                ]
                 print(sponsor_timestamps)
             else:
-                print(f"{video_id}--------------------{r.status_code}-------------------", r.text)
+                print(
+                    f"{video_id}--------------------{r.status_code}-------------------",
+                    r.text,
+                )
                 continue
 
             sponsor_segment_timestamps = {
                 "video_id": video_id,
-                "sponsor_times": sponsor_timestamps
+                "sponsor_times": sponsor_timestamps,
             }
             file.write(json.dumps(sponsor_segment_timestamps) + "\n")
 
@@ -61,31 +69,36 @@ def json_to_csv_transcripts(_transcripts: DataFrame, _sponsor_times: DataFrame) 
     print("Reformatting to csv and relabeling transcripts")
     sponsor_segments_from_api = None
     try:
-        sponsor_segments_from_api = pd.read_json("sponsor_data/sponsor_timestamps.ndjson", lines=True)
+        sponsor_segments_from_api = pd.read_json(
+            "sponsor_data/sponsor_timestamps.ndjson", lines=True
+        )
         sponsor_segments_from_api.set_index("video_id", inplace=True)
     except FileNotFoundError:
-        print("sponsor_timestamps.ndjson not found, using only timestamps from _sponsor_times")
+        print(
+            "sponsor_timestamps.ndjson not found, using only timestamps from _sponsor_times"
+        )
 
     sponsor_segments_database = _sponsor_times
 
-    csv_transcript = {
-        "word": [],
-        "start": [],
-        "ad": []
-    }
+    csv_transcript = {"word": [], "start": [], "ad": []}
 
     for _, row in _transcripts.iterrows():
         sponsor_segments = []
         if sponsor_segments_from_api is not None:
             try:
-                sponsor_segments = sponsor_segments_from_api.at[row["video_id"], "sponsor_times"]
+                sponsor_segments = sponsor_segments_from_api.at[
+                    row["video_id"], "sponsor_times"
+                ]
                 # print(sponsor_segments)
             except KeyError:
-                print(f"sponsor_segments_from_api does not have timestamps for {row['video_id']} using processed_sponsorTimes.csv timestamps")
+                print(
+                    f"sponsor_segments_from_api does not have timestamps for {row['video_id']} using processed_sponsorTimes.csv timestamps"
+                )
 
         if len(sponsor_segments) == 0:
             sponsor_segments = sponsor_segments_database[
-                sponsor_segments_database["videoID"] == row["video_id"]][["startTime", "endTime"]].to_numpy()
+                sponsor_segments_database["videoID"] == row["video_id"]
+            ][["startTime", "endTime"]].to_numpy()
 
         # print(sponsor_segments, "  ", row["video_id"])
 
@@ -101,7 +114,10 @@ def json_to_csv_transcripts(_transcripts: DataFrame, _sponsor_times: DataFrame) 
                 is_ad = False
                 for sponsor in sponsor_segments:
                     sponsor_start, sponsor_end = sponsor
-                    if sponsor_end > word_start > sponsor_start and word_end > sponsor_start:
+                    if (
+                        sponsor_end > word_start > sponsor_start
+                        and word_end > sponsor_start
+                    ):
                         is_ad = True
                         break
 
@@ -110,8 +126,11 @@ def json_to_csv_transcripts(_transcripts: DataFrame, _sponsor_times: DataFrame) 
                 csv_transcript["ad"].append(is_ad)
 
     print("Finished reformatting and readjusting labels, saving to csv")
-    pd.DataFrame(csv_transcript).to_csv(transcription_dir + "youtube_manual_transcriptions.csv", index=False)
+    pd.DataFrame(csv_transcript).to_csv(
+        transcription_dir + "youtube_manual_transcriptions.csv", index=False
+    )
 
-#get_timestamps()
 
-#json_to_csv_transcripts(transcripts, pd.read_csv(processed_sponsorTimes_path))
+# get_timestamps()
+
+# json_to_csv_transcripts(transcripts, pd.read_csv(processed_sponsorTimes_path))
