@@ -1,9 +1,13 @@
 from typing import Callable
 import pandas as pd
-from bayes import NaiveBayesClassifier
-from preprocessors import DEFAULT_CHUNK_WORDS, preprocess_words
+from bayes.bayes import NaiveBayesClassifier
+from bayes.preprocessors import (
+    DEFAULT_CHUNK_WORDS,
+    preprocess_words,
+    DEFUALT_PREPROCESSORS,
+    DEFAULT_CHUNK_WORDS,
+)
 import argparse
-from preprocessors import DEFUALT_PREPROCESSORS, DEFAULT_CHUNK_WORDS
 
 
 def train(

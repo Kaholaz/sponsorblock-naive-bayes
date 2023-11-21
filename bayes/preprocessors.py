@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-import sys
 import re
 from typing import Optional, Callable
 from typing import Optional, Callable

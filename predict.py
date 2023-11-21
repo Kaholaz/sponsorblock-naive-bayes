@@ -1,12 +1,15 @@
-import pandas as pd
-from bayes import (
+from bayes.bayes import (
     DEFAULT_HAM_THRESHOLD,
     NaiveBayesClassifier,
     DEFAULT_WINDOW_SIZE,
     evaluate_classification,
 )
 from transcribers.audio_transcriber import get_transcription, get_video_id
-from preprocessors import DEFUALT_PREPROCESSORS, DEFAULT_CHUNK_WORDS, preprocess_words
+from bayes.preprocessors import (
+    DEFUALT_PREPROCESSORS,
+    DEFAULT_CHUNK_WORDS,
+    preprocess_words,
+)
 import argparse
 
 from transcribers.youtube_transcription_fetcher import fetch_transcript
