@@ -31,15 +31,15 @@ def main(_data: DataFrame,
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate the model on content. Either a YouTube video, local "
-                                                 "audio file or a csv dataset.")
+                                                 "audio file or a transcription csv file.")
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-v", "--video", type=str,
-                       help="The video to evaluate. Can either be aYouTube video ID or a URL.",)
+                       help="The video to evaluate. Can either be a YouTube video ID or a URL.",)
     group.add_argument("-a", "--audio-path", type=str,
-                       help="For evaluating a local audio file. Has to be absolute path of the audio file.",)
-    group.add_argument("-d", "--dataset-path", type=str,
-                       help="For evaluating a local audio file. Has to be absolute path of the audio file.",)
+                       help="For evaluating a local audio file. Has to be the path of the file.",)
+    group.add_argument("-d", "--transcription-path", type=str,
+                       help="For evaluating the model on a transcription file. Has to be the path of the file.",)
 
     parser.add_argument("-m", "--model-path", type=str,
                         help="The path of the model file to evaluate on. Should be preprocessed data.",
@@ -75,9 +75,9 @@ if __name__ == "__main__":
     elif args.audio_path:
         data = transcribe_segment(args.audio_path, delete_file=False)
     elif args.dataset_path:
-        data = DataFrame.from_csv(args.dataset_path)
+        data = DataFrame.from_csv(args.transcription_path)
     else:
-        raise Exception("Missing args. Must provide something to transcribe, either --video or --audio_path")
+        raise Exception("Missing args. Must provide something to transcribe, either --video, --audio-path or --transcription-path")
 
     preprocessors = []
 
