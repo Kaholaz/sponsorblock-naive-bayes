@@ -9,7 +9,11 @@ from bayes import (
     visualize_data_summary,
 )
 from transcribers.audio_transcriber import get_transcription, transcribe_segment
-from preprocessors import DEFUALT_PREPROCESSORS, DEFAULT_CHUNK_WORDS, preprocess_words
+from bayes.preprocessors import (
+    DEFUALT_PREPROCESSORS,
+    DEFAULT_CHUNK_WORDS,
+    preprocess_words,
+)
 import argparse
 
 

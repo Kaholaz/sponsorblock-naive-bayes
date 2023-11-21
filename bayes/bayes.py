@@ -7,7 +7,7 @@ from pandas import DataFrame
 from wordcloud import WordCloud
 from matplotlib import pyplot as plt
 from tqdm import tqdm, trange
-from preprocessors import PreprocessedData
+from bayes.preprocessors import PreprocessedData
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
