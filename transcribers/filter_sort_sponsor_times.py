@@ -33,12 +33,12 @@ def get_categories(video_ids: list) -> dict[str, str]:
     video_categories = {}
 
     for i in range(0, len(video_ids), max_ids_per_request):
-        batch_ids = video_ids[i:i + max_ids_per_request]
+        batch_ids = video_ids[i : i + max_ids_per_request]
         params = {
             "part": "snippet",
             "id": ",".join(batch_ids),
             "key": API_KEY,
-            "fields": "items(id,snippet(categoryId))"
+            "fields": "items(id,snippet(categoryId))",
         }
         response = requests.get(YOUTUBE_API_URL, params=params)
         response.raise_for_status()
@@ -53,9 +53,14 @@ def get_categories(video_ids: list) -> dict[str, str]:
 
 if __name__ == "__main__":
     try:
-        for chunk in pd.read_csv(sponsorTimes_path, usecols=["videoID", "startTime", "endTime", "views", "votes", "category"],
-                                 chunksize=chunk_size):
-            filteredChunk = chunk[(chunk["votes"] >= 3) & (chunk["category"] == "sponsor")]
+        for chunk in pd.read_csv(
+            sponsorTimes_path,
+            usecols=["videoID", "startTime", "endTime", "views", "votes", "category"],
+            chunksize=chunk_size,
+        ):
+            filteredChunk = chunk[
+                (chunk["votes"] >= 3) & (chunk["category"] == "sponsor")
+            ]
             chunks.append(filteredChunk)
     except FileNotFoundError as e:
         print(f"No sponsorTime.csv data file was found: {e}")
@@ -69,10 +74,16 @@ if __name__ == "__main__":
 
     videoCategories = get_categories(uniqueVideoIds)
 
-    musicVideos = {video_id for video_id, category_id in videoCategories.items() if category_id == "10"}
+    musicVideos = {
+        video_id
+        for video_id, category_id in videoCategories.items()
+        if category_id == "10"
+    }
 
     dfSorted = dfSorted[~dfSorted["videoID"].isin(musicVideos)]
 
     dfSorted.to_csv(processed_sponsorTimes_path, index=False)
 
-    print(f"Filtered out video ids classified as music, total {len(musicVideos)} videos:\n{musicVideos}")
+    print(
+        f"Filtered out video ids classified as music, total {len(musicVideos)} videos:\n{musicVideos}"
+    )
