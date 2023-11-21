@@ -12,6 +12,9 @@ For the supervised learning of the model [SponsorBlock API](https://sponsor.ajay
 - 16GB RAM
 
 ## Installation
+```bash
+python -m venv venv && source venv/bin/activate
+```
 
 ```bash
 pip install -r requirements.txt
