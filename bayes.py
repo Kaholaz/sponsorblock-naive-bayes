@@ -12,8 +12,8 @@ import numpy as np
 
 tqdm.pandas()
 
-DEFAULT_WINDOW_SIZE = 100
-DEFAULT_HAM_THRESHOLD = 0.5
+DEFAULT_WINDOW_SIZE = 50
+DEFAULT_HAM_THRESHOLD = 0.8
 DEFAULT_WORD_CHUNKING = 1
 DEFAULT_ALPHA = 1
 
@@ -177,7 +177,7 @@ class NaiveBayesClassifier:
         return testing_data
 
     @staticmethod
-    def evaluate_classification(words: DataFrame, ham_threshold=DEFAULT_HAM_THRESHOLD):
+    def evaluate_classification(words: DataFrame, ham_threshold=DEFAULT_HAM_THRESHOLD, verbose=False) -> None:
         timestamps = []
         spam_score = []
         real_spam_score = []
@@ -187,7 +187,9 @@ class NaiveBayesClassifier:
         true_positives = 0
         true_negatives = 0
 
-        print(f"Spam words ({ham_threshold} threshold):")
+        start_of_ad = -1
+        ad_words = []
+        print(f"Spam on ({ham_threshold} threshold):")
         for row in words.itertuples():
             timestamps.append(row.start)
             average_spam = row.total_spam / row.runs
@@ -215,25 +217,45 @@ class NaiveBayesClassifier:
             if true_positive:
                 true_positives += 1
 
+
             if average_spam > ham_threshold:
-                timestamp = datetime.timedelta(seconds=row.start)
-                max_width = 20  # Adjust this value to your desired column width
-                value = row.word
-                print(
-                    f"Spam: {str(timestamp).ljust(max_width)}Word: {value.ljust(max_width)}Ad: {str(is_ad).ljust(max_width)}Average spam: {average_spam}"
-                )
+                if start_of_ad == -1:
+                    start_of_ad = row.start
+                
+                ad_words.append(row.word)
 
-        print("\nAccuracy:         ", 1 - (failed_predictions / len(words)))
-        print("False negatives:  ", false_negatives)
-        print("False positives:  ", false_positives)
-        print("True negatives:   ", true_negatives)
-        print("True positives:   ", true_positives)
-        print("Total words:       ", len(words))
-        print("Total ads:         ", len(words[words["ad"] == True]))
-        print("\nParameters:")
-        print("Ham threshold:     ", ham_threshold)
+            else:
+                if start_of_ad != -1:
+                    end_of_ad = row.start
+                
+                    print(
+                        f"Ad: {str(datetime.timedelta(seconds=start_of_ad))} - {str(datetime.timedelta(seconds=end_of_ad))}"
+                    )
+                    print( " ".join(ad_words), "\n")
+                    ad_words = []
+                    start_of_ad = -1
+        
+        if start_of_ad != -1:
+            end_of_ad = row.start
+        
+            print(
+                f"Ad: {str(datetime.timedelta(seconds=start_of_ad))} - {str(datetime.timedelta(seconds=end_of_ad))}"
+            )
+            print(" ".join(ad_words))
+            start_of_ad = -1
 
-        plot_spam_score(timestamps, spam_score, real_spam_score)
+        if verbose:
+            print("\nAccuracy:         ", 1 - (failed_predictions / len(words)))
+            print("False negatives:  ", false_negatives)
+            print("False positives:  ", false_positives)
+            print("True negatives:   ", true_negatives)
+            print("True positives:   ", true_positives)
+            print("Total words:       ", len(words))
+            print("Total ads:         ", len(words[words["ad"] == True]))
+            print("\nParameters:")
+            print("Ham threshold:     ", ham_threshold)
+
+            plot_spam_score(timestamps, spam_score, real_spam_score)
 
 
 def visualize_word_importance(model, start_n, stop_n) -> None:
