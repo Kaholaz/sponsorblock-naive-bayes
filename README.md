@@ -24,6 +24,56 @@ The dataset solution consists of a combination of the [SponsorBlock API](https:/
 pip install -r requirements.txt
 ```
 
+## Usage
+
+### Text-corpus format
+Our Naive Bayes model relies on supervised learning and the format for the training data must be csv formatted as follows:
+
+```csv
+word,start,ad
+```
+The transcribers included in this repository output the data in this format. If you create your own transcriber, make sure to output the data in this format.
+
+If you need to build a dataset, follow the steps in the section [Building dataset](#building-dataset).
+
+### Transcribing
+If you want to transcribe individual files, you can use the code file `transcriber.py` to get transcriptions from either YouTube videos or transcribing local audio files.
+
+```bash
+python transcriber.py [-h] (-v VIDEO | -a AUDIO_PATH) [-s SAVE_PATH]
+```
+Use the -h flag for detailed descriptions of the file and the different arguments.
+
+### Training
+The model can be trained with the `train.py`. The script takes two required arguments, the path to the training data and the path to the model output. To see all the arguments run the following command:
+
+```bash
+python train.py -h
+```
+
+PS: Make sure to use the same chunking/n-gram format as the model when used for prediction/evaluation. It would make little sense to use unigrams on a model that is trained on bigrams.
+
+
+### Evaluating
+For evaluating a model, the file `evaluate.py` can be used.
+
+You can run the code by using the line below and filling in the necessary arguments. The arguments encapsulated by square brackets are optional, the arguments that have no brackets are required, and the arguments encapsulated by paranthesis and separated by "|" mean only one of the arguments are required.
+```bash
+python evaluate.py [-h] (-v VIDEO | -a AUDIO_PATH | -d DATASET_PATH) -m MODEL_PATH [-c CHUNK_WORDS] [-w WINDOW_SIZE]
+                     [-ht HAM_THRESHOLD] [--stopwords STOPWORDS] [--substitution SUBSTITUTION]
+```
+This code can be used to evaluate the model on youtube videos, local audio files, or already existing transcription files.
+
+
+### Predicting
+To predict a YouTube video, run the following command:
+
+```bash
+python predict.py --video <video_url | video_id> --model <model_path>
+```
+
+The model path is the path to the model outputted by the training script.
+
 ## Building dataset
 Our process of building the dataset although comparatively much faster than other alternatives, is still time consuming.
 Before doing anything else, make sure to have downloaded the sponsorTimes.csv file from the SponsorBlock database, using this repository [sb-mirror](https://github.com/mchangrh/sb-mirror)
@@ -75,54 +125,6 @@ python transcription_dataset_json_to_csv.py
 ```
 After this stage, you should now have a large dataset in correct csv format in the project root, which can be used to train the model.
 If you haven't skipped the optional steps, the text corpus labelling quality is going to be considerably higher.
-
-## Usage
-### Text-corpus format
-Our Naive Bayes model relies on supervised learning and the format for the training data must be csv formatted as follows:
-
-```csv
-word,start,ad
-```
-The transcribers included in this repository output the data in this format. If you create your own transcriber, make sure to output the data in this format.
-
-### Transcribing
-If you want to transcribe individual files, you can use the code file `transcriber.py` to get transcriptions from either YouTube videos or transcribing local audio files.
-
-```bash
-python transcriber.py [-h] (-v VIDEO | -a AUDIO_PATH) [-s SAVE_PATH]
-```
-Use the -h flag for detailed descriptions of the file and the different arguments.
-
-### Training
-The model can be trained with the `train.py`. The script takes two required arguments, the path to the training data and the path to the model output. To see all the arguments run the following command:
-
-```bash
-python train.py -h
-```
-
-PS: Make sure to use the same chunking/n-gram format as the model when used for prediction/evaluation. It would make little sense to use unigrams on a model that is trained on bigrams.
-
-
-### Evaluating
-For evaluating a model, the file `evaluate.py` can be used.
-
-You can run the code by using the line below and filling in the necessary arguments. The arguments encapsulated by square brackets are optional, the arguments that have no brackets are required, and the arguments encapsulated by paranthesis and separated by "|" mean only one of the arguments are required.
-```bash
-python evaluate.py [-h] (-v VIDEO | -a AUDIO_PATH | -d DATASET_PATH) -m MODEL_PATH [-c CHUNK_WORDS] [-w WINDOW_SIZE]
-                     [-ht HAM_THRESHOLD] [--stopwords STOPWORDS] [--substitution SUBSTITUTION]
-```
-This code can be used to evaluate the model on youtube videos, local audio files, or already existing transcription files.
-
-
-### Predicting
-To predict a YouTube video, run the following command:
-
-```bash
-python predict.py --video <video_url | video_id> --model <model_path>
-```
-
-The model path is the path to the model outputted by the training script.
-
 
 ## Further work
 
