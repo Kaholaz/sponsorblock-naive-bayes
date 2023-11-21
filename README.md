@@ -1,4 +1,4 @@
-# Ad-Segment-Classification-Naive-Bayes
+# sponsorblock-naive-bayes
 This project explores the possibility of detecting sponsor segments on streaming platforms. The primary goal for the application is speed and low resource usage, as the model is intended to be used on low-end hardware, such as personal computers and mobile devices.
 
 The model that is explored in this project is the Naive Bayes based statistical classifier, which is repurposed and used for detecting dynamic length ads/sponsor-segments in the audio medium.
