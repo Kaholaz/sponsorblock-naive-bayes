@@ -1,8 +1,9 @@
+from dataclasses import dataclass, field
 import sys
 import re
 from typing import Optional, Callable
 from typing import Optional, Callable
-from pandas import DataFrame
+import pandas as pd
 from tqdm import tqdm
 from typing import Optional, Callable
 from nltk.corpus import stopwords
@@ -36,14 +37,23 @@ def stopword_preprocessor(word: str):
         if w not in (_stopword_list)
     )
 
+
 DEFUALT_PREPROCESSORS = [substitution_preprocessor, stopword_preprocessor]
 DEFAULT_CHUNK_WORDS = 1
 
+
+@dataclass
+class PreprocessedData:
+    dataframe: pd.DataFrame
+    word_chunking: int = 1
+    preprocesors_applied: list[str] = field(default_factory=list)
+
+
 def preprocess_words(
-    text: DataFrame,  
+    text: pd.DataFrame,
     chunk_words: int,
     preprocessors: Optional[list[Callable[[str], str]]] = None,
-) -> DataFrame:
+) -> PreprocessedData:
     """
     Preprocesses by running a list of preprocessors on each word in a list of words.
 
@@ -72,4 +82,6 @@ def preprocess_words(
     clean_text = clean_text.loc[clean_text["word"] != ""]
     clean_text.reset_index(drop=True, inplace=True)
 
-    return clean_text
+    return PreprocessedData(
+        clean_text, chunk_words, [fn.__name__ for fn in preprocessors]
+    )
