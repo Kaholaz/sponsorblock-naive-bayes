@@ -27,19 +27,18 @@ if __name__ == "__main__":
     argparse.add_argument("-o", "--output-file", type=str, help="The output file to save the model to.", default="model.bayes")
 
     argparse.add_argument("--chunk-words", type=int, help="The number of words to chunk together.", default=DEFAULT_CHUNK_WORDS)
-    argparse.add_argument("--stopwords", type=bool, help="Preprocess with stopwords and lemmatization", default=True)
-    argparse.add_argument("--substituion", type=bool, help="Preprocess with substitution.", default=True)
+    argparse.add_argument("--no-stopwords", action="store_false", help="Preprocess with stopwords and lemmatization", default=True)
+    argparse.add_argument("--no-stopwords", action="store_false", help="Preprocess with stopwords and lemmatization", default=True)
+    argparse.add_argument("--no-substitution", action="store_false", help="Preprocess with substitution.", default=True)
     
     args = argparse.parse_args()
 
     preprocessors = []
 
-    if args.stopwords:
-        preprocessors.append(DEFUALT_PREPROCESSORS[1])
-    
-    if args.substituion:
+    if not args.no_substitution:
         preprocessors.append(DEFUALT_PREPROCESSORS[0])
 
-    print(args)
-
+    if not args.no_stopwords:
+        preprocessors.append(DEFUALT_PREPROCESSORS[1])
+    
     train(args.input_file, args.output_file, args.chunk_words, preprocessors)
