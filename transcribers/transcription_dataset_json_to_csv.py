@@ -11,7 +11,7 @@ import requests
 import json
 import re
 
-transcription_dir = ROOT_DIR + "/transcriptions/"
+transcription_dir = ROOT_DIR
 transcription_path = transcription_dir + "youtube_manual_transcriptions.ndjson"
 processed_sponsorTimes_path = "sponsor_data/processed_sponsorTimes.csv"
 
