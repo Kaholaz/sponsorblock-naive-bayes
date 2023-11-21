@@ -186,7 +186,7 @@ def fetch_transcript(video_id: str) -> DataFrame:
     }
 
     r = requests.get(f"https://sponsor.ajay.app/api/skipSegments?videoID={video_id}")
-    if r.status_code != 404 or r.status_code != 204:
+    if r.status_code == 200:
         sponsor_segments = r.json()
         sponsor_timestamps = [(segment["segment"][0], segment["segment"][1]) for segment in sponsor_segments]
     else:
