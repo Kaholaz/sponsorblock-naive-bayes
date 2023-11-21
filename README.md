@@ -1,14 +1,9 @@
 # Ad-Segment-Classification-Naive-Bayes
+This project explores the possibility of detecting sponsor segments on streaming platforms. The primary goal for the application is speed and low resource usage, as the model is intended to be used on low-end hardware, such as personal computers and mobile devices.
 
-The intent of this project was to explore the possibility of extending the option of text based ad segment detection over to (compared to deep learning models) lower-end hardware.
+The model that is explored in this project is the Naive Bayes based statistical classifier, which is repurposed and used for detecting dynamic length ads/sponsor-segments in the audio medium.
 
-The model that is explored in this project is therefore a Naive Bayes based statistical classifier, which is repurposed and used for detecting dynamic length ads/sponsor-segments in the audio medium.
-
-The model has shown promising results when classifying sponsor segments in YouTube videos. If this project is to be used on other content types one may or may not find success using this model, assuming one manages to accumulate a sufficiently large text corpus to train on.
-
-We've been unable to test training the model on other content-types than YouTube videos due to time constraints, even using Speech To Text modules like WhisperX would still take 3+ minutes for a single video, making this extremely time consuming when transcribing thousands of files. This project has therefore relied mainly on YouTube's caption API for gathering transcriptions.
-
-The dataset solution consists of a combination of the [SponsorBlock API](https://sponsor.ajay.app/) and the [youtube_transcript_api](https://pypi.org/project/youtube-transcript-api/) python module to create a labelled text corpus.
+For the supervised learning of the model [SponsorBlock API](https://sponsor.ajay.app/) is used to determine ad segments. [youtube_transcript_api](https://pypi.org/project/youtube-transcript-api/) is used to fetch the transcriptions of the videos. For non-YouTube videos, [WhisperX](https://github.com/m-bain/whisperX) is used to transcribe the videos.
 
 
 ## Pre-requisites
@@ -24,8 +19,8 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Text-corpus format
-Our Naive Bayes model relies on supervised learning and the format for the training data must be csv formatted as follows:
+### Dataset and data format
+The dataset must be in the format of a csv file with the following columns:
 
 ```csv
 word,start,ad
@@ -72,7 +67,7 @@ python predict.py --video <video_url | video_id> --model <model_path>
 
 The model path is the path to the model outputted by the training script.
 
-## Building dataset
+## Building datasets
 Our process of building the dataset although comparatively much faster than other alternatives, is still time consuming.
 Before doing anything else, make sure to have downloaded the sponsorTimes.csv file from the SponsorBlock database, using this repository [sb-mirror](https://github.com/mchangrh/sb-mirror)
 Move the sponsorTimes.csv file into this folder {PROJECT_ROOT}/transcribers/sponsor_data, if the folder doesn't exist, create it.
@@ -124,7 +119,14 @@ python transcription_dataset_json_to_csv.py
 After this stage, you should now have a large dataset in correct csv format in the project root, which can be used to train the model.
 If you haven't skipped the optional steps, the text corpus labelling quality is going to be considerably higher.
 
+## Results
+
+The model has shown promising results when classifying sponsor segments in YouTube videos. If this project is to be used on other content types one may or may not find success using this model, assuming one manages to accumulate a sufficiently large text corpus to train on.
+
+We've been unable to test training the model on other content-types than YouTube videos due to time constraints, even using Speech To Text modules like WhisperX would still take 3+ minutes for a single video, making this extremely time consuming when transcribing thousands of files. This project has therefore relied mainly on YouTube's caption API for gathering transcriptions.
+
+
 ## Further work
 
 - Look into wordembedding
-- Web extension
+- Create a web extension
