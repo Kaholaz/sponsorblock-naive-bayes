@@ -66,6 +66,7 @@ def preprocess_words(
     print("Preprocessing text...")
     clean_text = text
     for preprocessor in preprocessors:
+        print(f"Running {preprocessor.__name__}...")
         clean_text["word"] = clean_text["word"].progress_apply(preprocessor)
 
     clean_text = clean_text.loc[clean_text["word"] != ""]
