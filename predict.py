@@ -1,25 +1,25 @@
 import pandas as pd
-from bayes import NaiveBayesClassifier, DEFAULT_WINDOW_SIZE
-from transcribers.audio_transcriber import  get_video_id
+from bayes import DEFAULT_HAM_THRESHOLD, NaiveBayesClassifier, DEFAULT_WINDOW_SIZE
+from transcribers.audio_transcriber import  get_transcription, get_video_id
 from preprocessors import DEFUALT_PREPROCESSORS, DEFAULT_CHUNK_WORDS, preprocess_words
 import argparse
 
 from transcribers.youtube_transcription_fetcher import fetch_transcript
 
-def main(video: str, model_data: str, chunk_words: int, preprocessors: list[str], verbose: bool, window_size: int):
+def main(video: str, model_data: str, chunk_words: int, preprocessors: list[str], verbose: bool, window_size: int, ham_threshold: float):
     model = NaiveBayesClassifier()
 
     video_id = get_video_id(video)
 
     model.load(model_data)
 
-    data = fetch_transcript(video_id)
+    data = get_transcription(video_id)
 
     clean_data = preprocess_words(data, chunk_words, preprocessors)
 
     classification = model.classify_text(clean_data)
 
-    model.evaluate_classification(classification, verbose=verbose)
+    model.evaluate_classification(classification, verbose=verbose, ham_threshold=ham_threshold)
 
 if __name__ == "__main__":
     argparse = argparse.ArgumentParser(description="Predict whether a video is an ad or not.")
@@ -34,6 +34,8 @@ if __name__ == "__main__":
     argparse.add_argument("--no-substitution", action="store_false", help="Preprocess with substitution.", default=True)
 
     argparse.add_argument("-w", "--window-size", help="Window size used to classify text", default=DEFAULT_WINDOW_SIZE)
+
+    argparse.add_argument("-t", "--ham-threshold", help="Ham threshold used to classify text", default=DEFAULT_HAM_THRESHOLD, type=float)
 
     args = argparse.parse_args()
 
@@ -50,5 +52,4 @@ if __name__ == "__main__":
         preprocessors.append(DEFUALT_PREPROCESSORS[0])
 
 
-
-    main(args.video, args.model_data, args.chunk_words, preprocessors, args.verbose, args.window_size)
+    main(args.video, args.model_data, args.chunk_words, preprocessors, args.verbose, args.window_size, args.ham_threshold)
