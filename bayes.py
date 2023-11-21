@@ -99,8 +99,8 @@ class NaiveBayesClassifier:
             self.prior_spam = float(data[3])
             self.prior_ham = float(data[4])
 
-            spam_word_counts = {}
-            ham_word_counts = {}
+            spam_word_counts = defaultdict(float)
+            ham_word_counts = defaultdict(float)
 
             current_line = 1
 
@@ -116,7 +116,7 @@ class NaiveBayesClassifier:
                 ham_word_counts[word] = float(count)
                 current_line += 1
 
-            self.spam_word_counts = (spam_word_counts,)
+            self.spam_word_counts = spam_word_counts
             self.ham_word_counts = ham_word_counts
 
     def classify_window(self, words: list[str], alpha: float = DEFAULT_ALPHA) -> float:
