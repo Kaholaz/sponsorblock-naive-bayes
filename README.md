@@ -3,7 +3,7 @@ This project explores the possibility of detecting sponsor segments on streaming
 
 The model that is explored in this project is the Naive Bayes based statistical classifier, which is repurposed and used for detecting dynamic length ads/sponsor-segments in the audio medium.
 
-For the supervised learning of the model [SponsorBlock API](https://sponsor.ajay.app/) is used to determine ad segments. [youtube_transcript_api](https://pypi.org/project/youtube-transcript-api/) is used to fetch the transcriptions of the videos. For non-YouTube videos, [WhisperX](https://github.com/m-bain/whisperX) is used to transcribe the videos.
+For the supervised learning of the model [SponsorBlock API](https://sponsor.ajay.app/) is used to determine ad segments. [youtube_transcript_api](https://pypi.org/project/youtube-transcript-api/) is used to fetch the transcriptions of youtube videos. In addition [WhisperX](https://github.com/m-bain/whisperX) is used to transcribe audio files locally for non-youtube videos.
 
 
 ## Pre-requisites
