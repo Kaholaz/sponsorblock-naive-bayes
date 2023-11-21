@@ -27,7 +27,7 @@ word,start,ad
 ```
 The transcribers included in this repository output the data in this format. If you create your own transcriber, make sure to output the data in this format.
 
-If you need to build a dataset, follow the steps in the section [Building dataset](#building-dataset).
+If you need to build a dataset, follow the steps in the section [Building datasets](#building-datasets).
 
 ### Transcribing
 If you want to transcribe individual files, you can use the code file `transcriber.py` to get transcriptions from either YouTube videos or transcribing local audio files.
