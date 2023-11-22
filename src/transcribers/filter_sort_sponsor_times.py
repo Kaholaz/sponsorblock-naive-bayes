@@ -9,10 +9,12 @@
     The processed sponsorTimes.csv can then be used in youtube_transcription_fetcher.py to fetch the english
         transcripts for each yt video id, and also assign each sentence in each transcript as an ad or not.
 """
-from config import ROOT_DIR
+import os
+
 import pandas as pd
 import requests
-import os
+
+from config import ROOT_DIR
 
 chunk_size = 50000
 chunks = []

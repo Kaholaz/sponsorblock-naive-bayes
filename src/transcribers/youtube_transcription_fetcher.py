@@ -9,18 +9,20 @@
         ad labels, after a transcript has been handled, it is saved to the json dataset file specific to
         the type of transcript (manual or auto).
 """
-from pandas import DataFrame
-from youtube_transcript_api import (
-    YouTubeTranscriptApi,
-    NoTranscriptFound,
-    TranscriptsDisabled,
-)
-from config import ROOT_DIR
-import pandas as pd
-import requests
 import json
 import os
 import re
+
+import pandas as pd
+import requests
+from pandas import DataFrame
+from youtube_transcript_api import (
+    NoTranscriptFound,
+    TranscriptsDisabled,
+    YouTubeTranscriptApi,
+)
+
+from config import ROOT_DIR
 
 processedSponsorTimesDir = ROOT_DIR + "/transcribers/sponsor_data/"
 processedSponsorTimesPath = processedSponsorTimesDir + "processed_sponsorTimes.csv"
