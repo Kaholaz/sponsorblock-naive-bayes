@@ -1,11 +1,11 @@
 import argparse
-from bayes.bayes import (
+from src.bayes.bayes import (
     DEFAULT_HAM_THRESHOLD,
     NaiveBayesClassifier,
     DEFAULT_WINDOW_SIZE,
     evaluate_classification,
 )
-from bayes.preprocessors import (
+from src.bayes.preprocessors import (
     DEFUALT_PREPROCESSORS,
     DEFAULT_CHUNK_WORDS,
     preprocess_words,
@@ -13,8 +13,8 @@ from bayes.preprocessors import (
 import pandas as pd
 from config import ROOT_DIR
 from pathlib import Path
-from transcribers.audio_transcriber import get_transcription, transcribe_segment
-from cli import predict, train, transcribe
+from src.transcribers.audio_transcriber import get_transcription, transcribe_segment
+from src.cli import predict, train, transcribe
 
 parser = argparse.ArgumentParser(
     description="Transcribe YouTube videos, train a model, or predict the ad content of a video."
@@ -151,13 +151,13 @@ if __name__ == "__main__":
         if not args.no_stopwords:
             preprocessors.append(DEFUALT_PREPROCESSORS[1])
 
-    if args.action in ("transcribe", "predict") and args.video:
+    if args.action in ("transcribe", "predict"):
         if args.video:
             data = get_transcription(args.video)
         elif args.audio_path:
             data = transcribe_segment(args.audio_path, delete_file=False)
         elif args.action == "predict" and args.transcription_path:
-            data = pd.DataFrame.from_csv(args.transcription_path)
+            data = pd.read_csv(args.transcription_path)
 
     if args.action == "transcribe":
         transcribe(data, args.save_path)

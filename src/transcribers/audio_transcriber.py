@@ -7,7 +7,7 @@ import re
 from typing import Optional
 from dataclasses import dataclass
 from pandas import DataFrame
-from transcribers.youtube_transcription_fetcher import fetch_transcript
+from .youtube_transcription_fetcher import fetch_transcript
 
 
 @dataclass(frozen=True)
@@ -167,7 +167,7 @@ def transcribe_segment(
     audio = whisper.load_audio(segment_filename)
     if delete_file:
         os.remove(segment_filename)
-    model = whisper.load_model("tiny", device="cpu")
+    model = whisper.load_model("medium", device="cpu")
     result = whisper.transcribe(model, audio, language="en")
 
     words = []
@@ -182,7 +182,7 @@ def transcribe_segment(
     return pd.DataFrame({"word": words, "start": starts, "ad": ads})
 
 
-def transcribe_and_save_videos(videos: [str], output_file_name: str) -> None:
+def transcribe_and_save_videos(videos: list[str], output_file_name: str) -> None:
     frames = []
     for video in videos:
         video_id = get_video_id(video)

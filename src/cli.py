@@ -1,15 +1,13 @@
 from pathlib import Path
-from bayes.bayes import (
+from .bayes.bayes import (
     NaiveBayesClassifier,
     evaluate_classification,
 )
-from bayes.preprocessors import (
+from .bayes.preprocessors import (
     preprocess_words,
 )
 from typing import Callable
 import pandas as pd
-
-from transcribers.youtube_transcription_fetcher import fetch_transcript
 
 
 def predict(
