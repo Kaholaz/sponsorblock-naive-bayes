@@ -1,4 +1,3 @@
-import os
 from dataclasses import dataclass, field
 import math
 import datetime
@@ -7,7 +6,7 @@ from pandas import DataFrame
 from wordcloud import WordCloud
 from matplotlib import pyplot as plt
 from tqdm import tqdm, trange
-from bayes.preprocessors import PreprocessedData
+from .preprocessors import PreprocessedData
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
