@@ -1,20 +1,22 @@
 import argparse
+from pathlib import Path
+
+import pandas as pd
+
+from config import ROOT_DIR
 from src.bayes.bayes import (
     DEFAULT_HAM_THRESHOLD,
-    NaiveBayesClassifier,
     DEFAULT_WINDOW_SIZE,
+    NaiveBayesClassifier,
     evaluate_classification,
 )
 from src.bayes.preprocessors import (
-    DEFUALT_PREPROCESSORS,
     DEFAULT_CHUNK_WORDS,
+    DEFUALT_PREPROCESSORS,
     preprocess_words,
 )
-import pandas as pd
-from config import ROOT_DIR
-from pathlib import Path
-from src.transcribers.audio_transcriber import get_transcription, transcribe_segment
 from src.cli import predict, train, transcribe
+from src.transcribers.audio_transcriber import get_transcription, transcribe_segment
 
 parser = argparse.ArgumentParser(
     description="Transcribe YouTube videos, train a model, or predict the ad content of a video."

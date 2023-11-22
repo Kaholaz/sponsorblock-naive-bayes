@@ -1,13 +1,10 @@
 from pathlib import Path
-from .bayes.bayes import (
-    NaiveBayesClassifier,
-    evaluate_classification,
-)
-from .bayes.preprocessors import (
-    preprocess_words,
-)
 from typing import Callable
+
 import pandas as pd
+
+from .bayes.bayes import NaiveBayesClassifier, evaluate_classification
+from .bayes.preprocessors import preprocess_words
 
 
 def predict(

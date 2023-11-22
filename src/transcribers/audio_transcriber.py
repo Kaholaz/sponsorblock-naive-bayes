@@ -1,12 +1,14 @@
-import yt_dlp
-import whisper_timestamped as whisper
-import pandas as pd
-import requests
 import os
 import re
-from typing import Optional
 from dataclasses import dataclass
+from typing import Optional
+
+import pandas as pd
+import requests
+import whisper_timestamped as whisper
+import yt_dlp
 from pandas import DataFrame
+
 from .youtube_transcription_fetcher import fetch_transcript
 
 

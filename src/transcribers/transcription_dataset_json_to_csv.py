@@ -4,12 +4,14 @@
         the json dataset, this script is used to convert the format to (word, start, ad).
     It also verifies the ad labels and readjusts the ad labels from sentence level to word level.
 """
-from pandas import DataFrame
-from config import ROOT_DIR
-import pandas as pd
-import requests
 import json
 import re
+
+import pandas as pd
+import requests
+from pandas import DataFrame
+
+from config import ROOT_DIR
 
 transcription_dir = ROOT_DIR
 transcription_path = transcription_dir + "youtube_manual_transcriptions.ndjson"

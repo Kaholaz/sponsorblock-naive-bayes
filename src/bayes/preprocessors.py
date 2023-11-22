@@ -1,12 +1,11 @@
-from dataclasses import dataclass, field
 import re
-from typing import Optional, Callable
-from typing import Optional, Callable
+from dataclasses import dataclass, field
+from typing import Callable, Optional
+
 import pandas as pd
-from tqdm import tqdm
-from typing import Optional, Callable
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
+from tqdm import tqdm
 
 tqdm.pandas()
 
