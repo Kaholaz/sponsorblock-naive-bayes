@@ -11,6 +11,8 @@ Our full training dataset is also available on [Google Drive](https://drive.goog
 
 - Python 3.10+
 - 16GB RAM
+- [ffmpeg](https://www.ffmpeg.org/download.html#build-windows)
+ffmpeg is used by WhisperX for handling audio files.
 
 ## Installation
 ```bash
