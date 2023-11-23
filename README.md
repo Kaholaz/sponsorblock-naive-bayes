@@ -5,6 +5,7 @@ The model that is explored in this project is the Naive Bayes based statistical 
 
 For the supervised learning of the model [SponsorBlock API](https://sponsor.ajay.app/) is used to determine ad segments. [youtube_transcript_api](https://pypi.org/project/youtube-transcript-api/) is used to fetch the transcriptions of youtube videos. In addition [WhisperX](https://github.com/m-bain/whisperX) is used to transcribe audio files locally for non-youtube videos.
 
+Our full training dataset is also available on [Google Drive](https://drive.google.com/file/d/1fjFW9Mbl35OQAt-dGI9FIP0Zl54fevJ5/view?usp=drive_link).
 
 ## Pre-requisites
 
@@ -73,12 +74,11 @@ python main.py predict [-h] [--chunk-words CHUNK_WORDS] [--no-stopwords] [--no-s
 The model path is the path to the model outputted by the training script.
 
 ## Building datasets
+Quick note: You can skip building the dataset if you just want to train the model with some data, our dataset of 7000+ videos is available on [Google Drive](https://drive.google.com/file/d/1fjFW9Mbl35OQAt-dGI9FIP0Zl54fevJ5/view?usp=drive_link)
+If you still want to build your own dataset of youtube transcriptions, just follow the instructions below.
+
 Our process of building the dataset although comparatively much faster than other alternatives, is still time consuming.
 Before doing anything else, make sure to have downloaded the sponsorTimes.csv file from the SponsorBlock database, using this repository [sb-mirror](https://github.com/mchangrh/sb-mirror)
-
-You can skip building the dataset if you just want to train the model with some data, our dataset of 7000+ videos is available on [google drive](https://drive.google.com/file/d/1fjFW9Mbl35OQAt-dGI9FIP0Zl54fevJ5/view?usp=drive_link)
-
-If you still want to build your own dataset of youtube transcriptions, just follow the instructions below.
 Move the sponsorTimes.csv file into this folder {PROJECT_ROOT}/transcribers/sponsor_data, if the folder doesn't exist, create it.
 
 Once the file {PROJECT_ROOT}/transcribers/sponsor_data/sponsorTimes.csv exists, follow these steps:
