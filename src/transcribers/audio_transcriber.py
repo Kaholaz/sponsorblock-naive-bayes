@@ -169,7 +169,7 @@ def transcribe_segment(
     audio = whisper.load_audio(segment_filename)
     if delete_file:
         os.remove(segment_filename)
-    model = whisper.load_model("medium", device="cpu")
+    model = whisper.load_model("tiny", device="cpu")
     result = whisper.transcribe(model, audio, language="en")
 
     words = []
