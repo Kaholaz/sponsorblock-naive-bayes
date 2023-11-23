@@ -30,9 +30,9 @@ os.makedirs(processedSponsorTimesDir, exist_ok=True)
 
 transcriptionDir = ROOT_DIR
 
-manualTranscriptionPath = transcriptionDir + "youtube_manual_transcriptions.ndjson"
-autoTranscriptionPath = transcriptionDir + "youtube_auto_transcriptions.ndjson"
-noTranscriptPath = transcriptionDir + "yt_vids_without_transcript.csv"
+manualTranscriptionPath = transcriptionDir + "/youtube_manual_transcriptions.ndjson"
+autoTranscriptionPath = transcriptionDir + "/youtube_auto_transcriptions.ndjson"
+noTranscriptPath = transcriptionDir + "/yt_vids_without_transcript.csv"
 
 transcriptLang = ["en-GB", "en-US", "en-CA", "en-AU", "en-NZ", "en"]
 
@@ -239,12 +239,5 @@ def fetch_transcript(video_id: str) -> DataFrame:
 
 
 if __name__ == "__main__":
-    # build_dataset()
+    build_dataset()
 
-    dfTranscripts = dataset_file_to_df(manualTranscriptionPath)
-
-    print(dfTranscripts)
-
-    # dfTranscripts = dataset_file_to_df(autoTranscriptionPath)
-
-    # print(dfTranscripts)
