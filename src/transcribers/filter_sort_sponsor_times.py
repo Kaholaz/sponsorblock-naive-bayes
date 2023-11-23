@@ -19,7 +19,7 @@ from config import ROOT_DIR
 chunk_size = 50000
 chunks = []
 
-directory = ROOT_DIR + "/transcribers/sponsor_data/"
+directory = "sponsor_data/"
 if not os.path.exists(directory):
     os.makedirs(directory)
 
@@ -55,6 +55,7 @@ def get_categories(video_ids: list) -> dict[str, str]:
 
 if __name__ == "__main__":
     try:
+        print("Reading sponsorTimes.csv")
         for chunk in pd.read_csv(
             sponsorTimes_path,
             usecols=["videoID", "startTime", "endTime", "views", "votes", "category"],
@@ -71,7 +72,7 @@ if __name__ == "__main__":
     dfCombined = pd.concat(chunks)
 
     dfSorted = dfCombined.sort_values(by="views", ascending=False)
-
+    print("Fetching video categories to filter out music videos")
     uniqueVideoIds = dfSorted["videoID"].unique().tolist()
 
     videoCategories = get_categories(uniqueVideoIds)
