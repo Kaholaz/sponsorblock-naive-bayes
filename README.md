@@ -33,39 +33,41 @@ The transcribers included in this repository output the data in this format. If 
 If you need to build a dataset, follow the steps in the section [Building datasets](#building-datasets).
 
 ### Transcribing
-If you want to transcribe individual files, you can use the code file `transcriber.py` to get transcriptions from either YouTube videos or transcribing local audio files.
+If you want to transcribe individual files, you can add the argument "transcribe" when running `python main.py` to get transcriptions from either YouTube videos or transcribing local audio files.
 
+The arguments encapsulated by square brackets are optional, the arguments that have no brackets are required, and the arguments encapsulated by paranthesis and separated by "|" mean only one of the arguments is required.
 ```bash
-python transcriber.py [-h] (-v VIDEO | -a AUDIO_PATH) [-s SAVE_PATH]
+python main.py transcribe [-h] (-v VIDEO | -a AUDIO_PATH) [-s SAVE_PATH]
 ```
 Use the -h flag for detailed descriptions of the file and the different arguments.
 
 ### Training
-The model can be trained with the `train.py`. The script takes two required arguments, the path to the training data and the path to the model output. To see all the arguments run the following command:
+The model can be trained by adding the "train" argument when running `main.py`. The script takes two required arguments, the path to the training data and the path to the model output.
 
+The line below shows all the arguments it takes. For a detailed description of the args, add the -h flag.
 ```bash
-python train.py -h
+python main.py train [-h] [--chunk-words CHUNK_WORDS] [--no-stopwords] [--no-substitution] -i INPUT_FILE [-o OUTPUT_FILE]
 ```
 
 PS: Make sure to use the same chunking/n-gram format as the model when used for prediction/evaluation. It would make little sense to use unigrams on a model that is trained on bigrams.
 
 
 ### Evaluating
-For evaluating a model, the file `evaluate.py` can be used.
+For evaluating the model on content, add the -v flag when running `python main.py predict`.
 
-You can run the code by using the line below and filling in the necessary arguments. The arguments encapsulated by square brackets are optional, the arguments that have no brackets are required, and the arguments encapsulated by paranthesis and separated by "|" mean only one of the arguments are required.
+You can run the code by using the line below and filling in the necessary arguments.
 ```bash
-python evaluate.py [-h] (-v VIDEO | -a AUDIO_PATH | -d DATASET_PATH) -m MODEL_PATH [-c CHUNK_WORDS] [-w WINDOW_SIZE]
-                     [-ht HAM_THRESHOLD] [--stopwords STOPWORDS] [--substitution SUBSTITUTION]
+python main.py predict [-h] [--chunk-words CHUNK_WORDS] [--no-stopwords] [--no-substitution] (-y VIDEO | -a AUDIO_PATH |
+              -d TRANSCRIPTION_PATH) --model-data MODEL_DATA [-v] [-w WINDOW_SIZE] [-t HAM_THRESHOLD]
 ```
 This code can be used to evaluate the model on youtube videos, local audio files, or already existing transcription files.
 
 
 ### Predicting
-To predict a YouTube video, run the following command:
-
+To only use the prediction, run the same command, but ommit the -v argument.
 ```bash
-python predict.py --video <video_url | video_id> --model <model_path>
+python main.py predict [-h] [--chunk-words CHUNK_WORDS] [--no-stopwords] [--no-substitution] (-y VIDEO | -a AUDIO_PATH |
+              -d TRANSCRIPTION_PATH) --model-data MODEL_DATA [-w WINDOW_SIZE] [-t HAM_THRESHOLD]
 ```
 
 The model path is the path to the model outputted by the training script.
@@ -73,6 +75,9 @@ The model path is the path to the model outputted by the training script.
 ## Building datasets
 Our process of building the dataset although comparatively much faster than other alternatives, is still time consuming.
 Before doing anything else, make sure to have downloaded the sponsorTimes.csv file from the SponsorBlock database, using this repository [sb-mirror](https://github.com/mchangrh/sb-mirror)
+
+You can skip building the dataset if you just want to train the model with some data, our dataset of 7000+ videos is available on [google drive](https://drive.google.com/file/d/1fjFW9Mbl35OQAt-dGI9FIP0Zl54fevJ5/view?usp=drive_link)
+
 Move the sponsorTimes.csv file into this folder {PROJECT_ROOT}/transcribers/sponsor_data, if the folder doesn't exist, create it.
 
 Once the file {PROJECT_ROOT}/transcribers/sponsor_data/sponsorTimes.csv exists, follow these steps:
@@ -81,22 +86,16 @@ Once the file {PROJECT_ROOT}/transcribers/sponsor_data/sponsorTimes.csv exists, 
 This step essentially filters out the worst timestamps that have very little user interaction, or are timestamped on videos with low viewcount. It also removes music videos as almost all of these don't contain any sponsor segments. It finally sorts it in descending order by viewcount, this ensures later on that one starts fetching transcriptions in the order of most views to lowest.
 
 For only this step, you need a YouTube API key to check the video categories of the video ids in the sponsorTimes.csv file in order to filter out music videos.
+Insert the API key into the filter_sort_times.py in the API_KEY variable.
 
-Insert this API key into the filter_sort_times.py in the API_KEY variable.
-
-Once done, run the code with:
-```bash
-python filter_sort_sponsor_times.py
-```
+Once done, run the code file `filter_sort_sponsor_times.py`
 
 ### Step 2
 Next step, if you've done step 1 continue as normal. Otherwise rename the file sponsorTimes.csv to processed_sponsorTimes.csv, and make sure the file {PROJECT_ROOT}/transcribers/sponsor_data/processed_sponsorTimes.csv exists. Also a word of caution, skipping step 1 will drastically lower the labelling quality of the transcriptions which will hurt the model.
 
 Run `filter_sort_sponsor_times.py` to fetch the transcripts for the video ids that are in the processed_sponsorTimes.csv file.
 This code tries fetching manual transcriptions, and if that fails, fetches autogenerated ones. These are saved into separate ndjson files for autogenerated and manual ones to preserve all transcription information. This enables us to treat each run as a continuous session. Rerunning the code simply resumes the previous session from where it left off.
-```bash
-python filter_sort_sponsor_times.py
-```
+
 After this step you should have two ndjson files, one for autogenerated ones and one for manual ones, in your project root folder.
 
 
@@ -105,11 +104,9 @@ The final step consists of two stages, the first one is optional and is for fetc
 The reason for this is because the timestamps in the sponsorTimes.csv file don't match the API completely.
 
 To decide which transcriptions file it should fetch the timestamps for, change the path variable in the `transcription_dataset_json_to_csv.py` `transcription_path = transcription_dir + "youtube_manual_transcriptions.ndjson"`
-If everything is in order, comment out the method call for the method get_timestamps() and run the file to fetch timestamps directly through the SponsorBlock API:
-```bash
-python transcription_dataset_json_to_csv.py
-```
-After this stage all the timestamps are saved by video id as a ndjson file in this path {PROJECT_ROOT}/transcribers/sponsor_data/sponsor_timestamps.ndjson
+If everything is in order, comment out the method call for the method get_timestamps() and run code file `transcription_dataset_json_to_csv.py` to fetch timestamps directly through the SponsorBlock API:
+
+After this stage all the timestamps are saved by video id as a ndjson file in this path {PROJECT_ROOT}/src/transcribers/sponsor_data/sponsor_timestamps.ndjson
 
 ### Step 3.2
 This final step consists of converting the ndjson file into correct csv format (word,start,ad).
