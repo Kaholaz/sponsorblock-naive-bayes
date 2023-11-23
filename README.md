@@ -23,6 +23,11 @@ python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+If you're on windows, some of the modules are not installable which will crash the requirements installation. For windows use this command instead:
+```bash
+Get-Content requirements.txt | ForEach-Object { pip install $_ }
+```
+
 ## Usage
 
 ### Dataset and data format
