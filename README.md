@@ -78,6 +78,7 @@ Before doing anything else, make sure to have downloaded the sponsorTimes.csv fi
 
 You can skip building the dataset if you just want to train the model with some data, our dataset of 7000+ videos is available on [google drive](https://drive.google.com/file/d/1fjFW9Mbl35OQAt-dGI9FIP0Zl54fevJ5/view?usp=drive_link)
 
+If you still want to build your own dataset of youtube transcriptions, just follow the instructions below.
 Move the sponsorTimes.csv file into this folder {PROJECT_ROOT}/transcribers/sponsor_data, if the folder doesn't exist, create it.
 
 Once the file {PROJECT_ROOT}/transcribers/sponsor_data/sponsorTimes.csv exists, follow these steps:
