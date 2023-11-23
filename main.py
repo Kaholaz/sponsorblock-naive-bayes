@@ -37,7 +37,7 @@ preprocess_parser.add_argument(
     "--no-substitution", action="store_true", help="Preprocess with substitution."
 )
 
-SAVE_PATH = ROOT_DIR + "/transcriptions/transcription.csv"
+SAVE_PATH = ROOT_DIR + "/transcription.csv"
 sub_parsers = parser.add_subparsers(title="action", dest="action")
 predict_parser = sub_parsers.add_parser(
     name="predict",
