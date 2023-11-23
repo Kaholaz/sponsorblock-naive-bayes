@@ -90,6 +90,7 @@ predict_parser.add_argument(
     "-w",
     "--window-size",
     help="Window size used to classify text",
+    type=int,
     default=DEFAULT_WINDOW_SIZE,
     type=int,
 )
