@@ -6,6 +6,7 @@
 """
 import json
 import re
+from io import StringIO
 
 import pandas as pd
 import requests
@@ -14,7 +15,7 @@ from pandas import DataFrame
 from config import ROOT_DIR
 
 transcription_dir = ROOT_DIR
-transcription_path = transcription_dir + "youtube_manual_transcriptions.ndjson"
+transcription_path = transcription_dir + "/youtube_manual_transcriptions.ndjson"
 processed_sponsorTimes_path = "sponsor_data/processed_sponsorTimes.csv"
 
 transcripts = pd.read_json(transcription_path, lines=True)
@@ -71,11 +72,14 @@ def json_to_csv_transcripts(_transcripts: DataFrame, _sponsor_times: DataFrame) 
     print("Reformatting to csv and relabeling transcripts")
     sponsor_segments_from_api = None
     try:
-        sponsor_segments_from_api = pd.read_json(
-            "sponsor_data/sponsor_timestamps.ndjson", lines=True
-        )
+        with open("sponsor_data/sponsor_timestamps.ndjson", "r") as file:
+            json_str = file.read()
+
+        json_data = StringIO(json_str)
+
+        sponsor_segments_from_api = pd.read_json(json_data, lines=True)
         sponsor_segments_from_api.set_index("video_id", inplace=True)
-    except FileNotFoundError:
+    except Exception:
         print(
             "sponsor_timestamps.ndjson not found, using only timestamps from _sponsor_times"
         )
@@ -129,7 +133,7 @@ def json_to_csv_transcripts(_transcripts: DataFrame, _sponsor_times: DataFrame) 
 
     print("Finished reformatting and readjusting labels, saving to csv")
     pd.DataFrame(csv_transcript).to_csv(
-        transcription_dir + "youtube_manual_transcriptions.csv", index=False
+        transcription_dir + "/youtube_manual_transcriptions.csv", index=False
     )
 
 
